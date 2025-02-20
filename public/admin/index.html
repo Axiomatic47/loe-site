@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Content Manager</title>
+    <link rel="stylesheet" href="styles/featured-widget.css" />
+  </head>
+  <body>
+    <!-- Load Netlify Identity widget only in production -->
+    <script>
+      if (window.location.hostname !== "localhost") {
+        var script = document.createElement('script');
+        script.src = "https://identity.netlify.com/v1/netlify-identity-widget.js";
+        document.body.appendChild(script);
+      }
+    </script>
+    <script src="https://unpkg.com/decap-cms@^3.5.0/dist/decap-cms.js"></script>
+    <script>
+      function findHeader() {
+        const possibleSelectors = [
+          '.css-12h6ic1-TopBar',
+          '.css-1gj57a0-AppMainContainer',
+          '.css-43ldtu-Collection',
+          'header',
+          '#header',
+          '.topbar',
+          '.top-bar'
+        ];
+
+        for (const selector of possibleSelectors) {
+          const element = document.querySelector(selector);
+          if (element) {
+            console.log('Found header with selector:', selector);
+            return element;
+          }
+        }
+
+        const mainContent = document.querySelector('main') || document.querySelector('.content') || document.body;
+        console.log('Using fallback container');
+        return mainContent;
+      }
+
+      function initializeAnalytics() {
+        console.log('Initializing analytics...');
+        if (!document.getElementById('analytics-section')) {
+          const container = findHeader();
+          if (container) {
+            console.log('Found container for analytics');
+            const analyticsSection = document.createElement('div');
+            analyticsSection.id = 'analytics-section';
+            analyticsSection.innerHTML = `
+              <div style="padding: 16px; background: white; margin: 16px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600;">Site Analytics</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px;">
+                  <div>
+                    <div style="color: #666; font-size: 14px;">Total Views</div>
+                    <div id="total-views" style="font-size: 20px; font-weight: bold; color: #2196f3;">-</div>
+                  </div>
+                  <div>
+                    <div style="color: #666; font-size: 14px;">Today</div>
+                    <div id="today-views" style="font-size: 20px; font-weight: bold; color: #2196f3;">-</div>
+                  </div>
+                  <div>
+                    <div style="color: #666; font-size: 14px;">This Week</div>
+                    <div id="week-views" style="font-size: 20px; font-weight: bold; color: #2196f3;">-</div>
+                  </div>
+                  <div>
+                    <div style="color: #666; font-size: 14px;">This Month</div>
+                    <div id="month-views" style="font-size: 20px; font-weight: bold; color: #2196f3;">-</div>
+                  </div>
+                </div>
+              </div>
+            `;
+            container.insertAdjacentElement('afterend', analyticsSection);
+            updateAnalytics();
+            setInterval(updateAnalytics, 60000);
+          }
+        }
+      }
+
+      async function updateAnalytics() {
+        try {
+          console.log('Fetching analytics data...');
+          const response = await fetch('/api/analytics', {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) {
+            console.error('Analytics response not ok:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Received analytics data:', data);
+
+          const elements = {
+            total: document.getElementById('total-views'),
+            today: document.getElementById('today-views'),
+            week: document.getElementById('week-views'),
+            month: document.getElementById('month-views')
+          };
+
+          if (elements.total && elements.today && elements.week && elements.month) {
+            elements.total.textContent = (data.total || 0).toLocaleString();
+            elements.today.textContent = (data.today || 0).toLocaleString();
+            elements.week.textContent = (data.thisWeek || 0).toLocaleString();
+            elements.month.textContent = (data.thisMonth || 0).toLocaleString();
+            console.log('Updated analytics display');
+          }
+        } catch (error) {
+          console.error('Error updating analytics:', error);
+          // Set default values on error
+          const elements = ['total-views', 'today-views', 'week-views', 'month-views'];
+          elements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = '0';
+          });
+        }
+      }
+
+      // Register CMS event listener
+      CMS.registerEventListener({
+        name: 'preSave',
+        handler: () => {
+          console.log('CMS preSave event');
+          setTimeout(initializeAnalytics, 1000);
+        },
+      });
+
+      // Initialize when window loads
+      window.addEventListener('load', () => {
+        console.log('Window loaded');
+        setTimeout(() => {
+          const initInterval = setInterval(() => {
+            const header = findHeader();
+            if (header) {
+              clearInterval(initInterval);
+              initializeAnalytics();
+            }
+          }, 1000);
+          setTimeout(() => clearInterval(initInterval), 10000);
+        }, 2000);
+      });
+
+      // Initialize on Netlify Identity events only in production
+      if (window.netlifyIdentity && window.location.hostname !== "localhost") {
+        window.netlifyIdentity.on("init", user => {
+          console.log('Netlify identity initialized');
+          if (user) {
+            setTimeout(initializeAnalytics, 1000);
+          }
+        });
+
+        window.netlifyIdentity.on("login", () => {
+          console.log('User logged in');
+          setTimeout(initializeAnalytics, 1000);
+        });
+      } else {
+        // Skipping Netlify Identity in local dev
+        if (window.netlifyIdentity) {
+          console.log('Local development mode - Skipping login setup');
+          initializeAnalytics();
+        }
+      }
+    </script>
+  </body>
+</html>
