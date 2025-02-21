@@ -55,12 +55,9 @@ app.post('/api/analytics/record', async (req, res) => {
 });
 
 // Proxy CMS requests to the CMS proxy server
-app.use('/api/cms', createProxyMiddleware({
+app.use('/api/v1', createProxyMiddleware({
   target: 'http://localhost:8083',
   changeOrigin: true,
-  pathRewrite: {
-    '^/api/cms': ''
-  },
   onError: (err, req, res) => {
     console.error('CMS Proxy Error:', err);
   }

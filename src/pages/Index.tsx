@@ -35,16 +35,40 @@ const Index = () => {
       <main className="container mx-auto px-4 py-16 flex-grow">
         <div className="text-center mb-24">
           <BlurPanel className="p-8 sm:p-12 mb-16 max-w-5xl mx-auto">
-            <h1 className="site-title text-4xl sm:text-5xl lg:text-6xl text-white drop-shadow-lg">
-              <span className="site-title-main">The Fundamental Laws of Supremacism and</span>
-              <span className="site-title-secondary">Egalitarianism</span>
-            </h1>
-            <p className="site-subtitle text-lg sm:text-xl text-gray-100 max-w-3xl mx-auto mt-6 mb-16 leading-relaxed drop-shadow">
-              Establishing the First Universal Laws of Conflict and Peace in Social Science
-            </p>
+            <div className="text-white">
+              <div style={{
+                fontSize: '56px',
+                fontFamily: 'serif',
+                lineHeight: '1.1',
+                marginBottom: '8px',
+                letterSpacing: '-0.02em'
+              }}>
+                The Fundamental Laws of Supremacism and
+              </div>
+              <div style={{
+                fontSize: '56px',
+                fontFamily: 'serif',
+                lineHeight: '1.1',
+                marginBottom: '24px',
+                letterSpacing: '-0.02em'
+              }}>
+                Egalitarianism
+              </div>
+              <div style={{
+                fontSize: '24px',
+                fontFamily: 'serif',
+                color: '#f0f0f0',
+                maxWidth: '800px',
+                margin: '0 auto',
+                marginBottom: '24px',
+                letterSpacing: '0.01em'
+              }}>
+                Establishing the First Universal Laws of Conflict and Peace in Social Science
+              </div>
 
-            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-              <HeroButtons />
+              <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 mt-8">
+                <HeroButtons />
+              </div>
             </div>
           </BlurPanel>
         </div>

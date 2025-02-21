@@ -1,7 +1,5 @@
 // public/admin/widgets/featured-sections.js
 
-const h = window.React.createElement;
-
 const FeaturedSectionsWidget = createClass({
   render: function() {
     const collections = this.props.collections;
@@ -56,11 +54,7 @@ const FeaturedSectionsWidget = createClass({
   }
 });
 
+// Register the widget
 if (window.CMS) {
-  try {
-    window.CMS.registerWidget('featuredSections', FeaturedSectionsWidget);
-    console.log('Featured Sections widget registered successfully');
-  } catch (err) {
-    console.error('Failed to register Featured Sections widget:', err);
-  }
+  CMS.registerWidget('featuredSections', FeaturedSectionsWidget);
 }

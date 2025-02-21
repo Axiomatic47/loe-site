@@ -1,21 +1,14 @@
 backend:
-  name: github
-  repo: Axiomatic47/corporate-veil
+  name: git-gateway
   branch: main
-  # Remove or comment out the base_url if not using a custom GitHub Enterprise instance
-  # base_url: http://localhost:8081
-
-# Disable local_backend unless you have a local backend server running
-# Comment out or set to false if not needed
-# local_backend: true
-# local_backend_url: http://localhost:8082
 
 media_folder: "public/uploads"
 public_folder: "/uploads"
-format: "json"
 
-editor:
-  preview: false
+media_library:
+  name: uploadcare
+  config:
+    publicKey: your-public-key
 
 collections:
   - name: "compositions"
@@ -27,7 +20,16 @@ collections:
     preview_path: "composition/{{collection_type}}/section/1"
     fields:
       - {label: "Title", name: "title", widget: "string"}
-      - {label: "Type", name: "collection_type", widget: "select", options: ["memorandum", "corrective"]}
+      - {
+          label: "Type", 
+          name: "collection_type", 
+          widget: "select",
+          options: [
+            { label: "Manuscript & White Papers", value: "manuscript" },
+            { label: "Data & Evidence", value: "data" },
+            { label: "World Map", value: "map" }
+          ]
+        }
       - label: "Sections"
         name: "sections"
         widget: "list"
@@ -44,16 +46,12 @@ collections:
             hint: "Optional - will default to intermediate content if left blank"
             editor_components: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
             modes: ["rich_text", "raw"]
-            buttons: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
-            sanitize_preview: false
           - label: "Intermediate Content (Level 3)"
             name: "content_level_3"
             widget: "markdown"
             required: true
             editor_components: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
             modes: ["rich_text", "raw"]
-            buttons: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
-            sanitize_preview: false
           - label: "Advanced Content (Level 5)"
             name: "content_level_5"
             widget: "markdown"
@@ -61,5 +59,6 @@ collections:
             hint: "Optional - will default to intermediate content if left blank"
             editor_components: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
             modes: ["rich_text", "raw"]
-            buttons: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
-            sanitize_preview: false
+
+local_backend: true
+publish_mode: editorial_workflow
