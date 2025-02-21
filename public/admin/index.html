@@ -4,43 +4,32 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Content Manager</title>
+</head>
+<body>
   <script>
     window.CMS_MANUAL_INIT = true;
   </script>
   <script src="https://unpkg.com/decap-cms@^3.5.0/dist/decap-cms.js"></script>
-</head>
-<body>
   <script>
-    console.log('Starting CMS initialization...');
-
-    window.addEventListener('load', () => {
-      const isLocalhost = window.location.hostname === 'localhost';
-
-      window.CMS.init({
+    window.addEventListener('load', function() {
+      CMS.init({
         config: {
           load_config_file: false,
-          backend: isLocalhost ? {
-            name: 'test-repo',
-            login: false
-          } : {
-            name: 'git-gateway',
-            branch: 'main'
-          },
-          local_backend: isLocalhost ? false : {
+          local_backend: {
             url: 'http://localhost:8082/api/v1'
+          },
+          backend: {
+            name: 'test-repo'
           },
           media_folder: "public/uploads",
           public_folder: "/uploads",
           collections: [
             {
-              name: "compositions",
-              label: "Compositions",
-              folder: "content/compositions",
+              name: "manuscript",
+              label: "Manuscript & White Papers",
+              folder: "content/manuscript",
               create: true,
-              extension: "json",
-              format: "json",
-              slug: "{{collection_type}}-{{slug}}",
-              preview_path: "composition/{{collection_type}}/section/1",
+              slug: "{{slug}}",
               fields: [
                 {
                   label: "Title",
@@ -50,11 +39,64 @@
                 {
                   label: "Type",
                   name: "collection_type",
-                  widget: "select",
-                  options: [
-                    { label: "Memorandum & White Papers", value: "memorandum" },
-                    { label: "Data & Evidence", value: "corrective" }
+                  widget: "hidden",
+                  default: "manuscript"
+                },
+                {
+                  label: "Sections",
+                  name: "sections",
+                  widget: "list",
+                  allow_add: true,
+                  fields: [
+                    {
+                      label: "Title",
+                      name: "title",
+                      widget: "string"
+                    },
+                    {
+                      label: "Featured",
+                      name: "featured",
+                      widget: "boolean",
+                      default: false
+                    },
+                    {
+                      label: "Basic Content (Level 1)",
+                      name: "content_level_1",
+                      widget: "markdown",
+                      required: false
+                    },
+                    {
+                      label: "Intermediate Content (Level 3)",
+                      name: "content_level_3",
+                      widget: "markdown"
+                    },
+                    {
+                      label: "Advanced Content (Level 5)",
+                      name: "content_level_5",
+                      widget: "markdown",
+                      required: false
+                    }
                   ]
+                }
+              ]
+            },
+            {
+              name: "data",
+              label: "Data & Evidence",
+              folder: "content/data",
+              create: true,
+              slug: "{{slug}}",
+              fields: [
+                {
+                  label: "Title",
+                  name: "title",
+                  widget: "string"
+                },
+                {
+                  label: "Type",
+                  name: "collection_type",
+                  widget: "hidden",
+                  default: "data"
                 },
                 {
                   label: "Sections",
@@ -96,10 +138,6 @@
             }
           ]
         }
-      }).then(() => {
-        console.log('CMS initialized successfully');
-      }).catch(error => {
-        console.error('CMS initialization failed:', error);
       });
     });
   </script>

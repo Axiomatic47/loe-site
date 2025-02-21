@@ -12,6 +12,8 @@ import SectionPage from "./pages/SectionPage";
 import Contact from "./pages/Contact";
 import Partners from "./pages/Partners";
 import Donate from "./pages/Donate";
+// We'll create this component later
+import WorldMap from "./pages/WorldMap";
 
 const queryClient = new QueryClient();
 
@@ -33,7 +35,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/composition/:compositionId" element={<CompositionsPage />} />
-          <Route path="/composition/:compositionId/composition/:compositionIndex/section/:sectionId" element={<SectionPage />} />
+          <Route
+            path="/composition/:compositionId/composition/:compositionIndex/section/:sectionId"
+            element={<SectionPage />}
+          />
+          <Route path="/worldmap" element={<WorldMap />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/donate" element={<Donate />} />

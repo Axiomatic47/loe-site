@@ -13,7 +13,7 @@ export interface Section {
 export interface Composition {
   id: number;
   title: string;
-  collection_type: 'memorandum' | 'corrective';
+  collection_type: 'manuscript' | 'data' | 'map';
   section: number;
   section_title: string;
   featured: boolean;
@@ -24,30 +24,38 @@ export interface Composition {
 }
 
 interface CompositionStore {
-  memorandum: Composition[];
-  corrective: Composition[];
+  manuscript: Composition[];
+  data: Composition[];
+  map: Composition[];
   initialized: boolean;
   setCompositions: (compositions: Composition[]) => void;
   refreshCompositions: () => Promise<void>;
 }
 
 export const useCompositionStore = create<CompositionStore>((set) => ({
-  memorandum: [],
-  corrective: [],
+  manuscript: [],
+  data: [],
+  map: [],
   initialized: false,
   setCompositions: (compositions) => {
-    const memorandum = compositions.filter(comp => comp.collection_type === 'memorandum');
-    const corrective = compositions.filter(comp => comp.collection_type === 'corrective');
-    set({ memorandum, corrective, initialized: true });
+    console.log('Setting compositions:', compositions);
+    const manuscript = compositions.filter(comp => comp.collection_type === 'manuscript');
+    const data = compositions.filter(comp => comp.collection_type === 'data');
+    const map = compositions.filter(comp => comp.collection_type === 'map');
+    set({ manuscript, data, map, initialized: true });
   },
   refreshCompositions: async () => {
-    const { loadCompositions } = await import('./compositionLoader');
+    console.log('Refreshing compositions...');
     try {
+      const { loadCompositions } = await import('./compositionLoader');
       const compositions = await loadCompositions();
+      console.log('Loaded compositions:', compositions);
       set(state => ({
         ...state,
-        memorandum: compositions.filter(comp => comp.collection_type === 'memorandum'),
-        corrective: compositions.filter(comp => comp.collection_type === 'corrective'),
+        manuscript: compositions.filter(comp => comp.collection_type === 'manuscript'),
+        data: compositions.filter(comp => comp.collection_type === 'data'),
+        map: compositions.filter(comp => comp.collection_type === 'map'),
+        initialized: true
       }));
     } catch (error) {
       console.error('Failed to refresh compositions:', error);

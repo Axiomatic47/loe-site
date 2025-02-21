@@ -19,9 +19,9 @@ const BlurPanel = ({
     <div
       className={cn(
         "relative rounded-lg p-8 sm:p-12",
-        "backdrop-blur-md bg-black/80", // Increased background opacity
+        "backdrop-blur-md bg-black/80",
         "border border-white/10",
-        "shadow-xl", // Added shadow for depth
+        "shadow-xl",
         className
       )}
     >
@@ -32,7 +32,7 @@ const BlurPanel = ({
 
 export const FeaturedWorkSection = () => {
   const navigate = useNavigate();
-  const { memorandum, corrective, refreshCompositions } = useCompositionStore();
+  const { manuscript, data, map, refreshCompositions } = useCompositionStore();
 
   useEffect(() => {
     refreshCompositions();
@@ -41,40 +41,42 @@ export const FeaturedWorkSection = () => {
   const getFeaturedSections = () => {
     const featured = [];
 
-    memorandum.forEach((comp, compIndex) => {
-      comp.sections.forEach((section, sectionIndex) => {
-        if (section.featured) {
-          featured.push({
-            ...section,
-            collection: 'memorandum',
-            compositionIndex: compIndex + 1,
-            sectionIndex: sectionIndex + 1,
-            compositionTitle: comp.title
-          });
-        }
-      });
-    });
+    // Helper function to process compositions
+    const processCompositions = (compositions: any[], collectionType: string) => {
+      if (Array.isArray(compositions)) {
+        compositions.forEach((comp, compIndex) => {
+          if (comp?.sections && Array.isArray(comp.sections)) {
+            comp.sections.forEach((section: any, sectionIndex: number) => {
+              if (section?.featured) {
+                featured.push({
+                  ...section,
+                  collection: collectionType,
+                  compositionIndex: compIndex + 1,
+                  sectionIndex: sectionIndex + 1,
+                  compositionTitle: comp.title
+                });
+              }
+            });
+          }
+        });
+      }
+    };
 
-    corrective.forEach((comp, compIndex) => {
-      comp.sections.forEach((section, sectionIndex) => {
-        if (section.featured) {
-          featured.push({
-            ...section,
-            collection: 'corrective',
-            compositionIndex: compIndex + 1,
-            sectionIndex: sectionIndex + 1,
-            compositionTitle: comp.title
-          });
-        }
-      });
-    });
+    // Process each collection type
+    processCompositions(manuscript, 'manuscript');
+    processCompositions(data, 'data');
+    processCompositions(map, 'map');
 
     return featured;
   };
 
   const featuredSections = getFeaturedSections();
 
-  const handleReadMore = (section) => {
+  if (featuredSections.length === 0) {
+    return null;
+  }
+
+  const handleReadMore = (section: any) => {
     navigate(`/composition/${section.collection}/composition/${section.compositionIndex}/section/${section.sectionIndex}`);
   };
 
@@ -116,7 +118,8 @@ export const FeaturedWorkSection = () => {
                 onClick={() => handleReadMore(section)}
                 className="text-blue-300 hover:text-blue-200 underline drop-shadow"
               >
-                Read more in {section.collection === 'memorandum' ? 'Memorandum' : 'Corrective Measures'}
+                Read more in {section.collection === 'manuscript' ? 'Manuscript' :
+                             section.collection === 'data' ? 'Data & Evidence' : 'World Map'}
               </button>
             </div>
           </BlurPanel>

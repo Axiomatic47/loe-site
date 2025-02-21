@@ -2,63 +2,81 @@ backend:
   name: git-gateway
   branch: main
 
+local_backend: true
+publish_mode: editorial_workflow
+
 media_folder: "public/uploads"
 public_folder: "/uploads"
 
-media_library:
-  name: uploadcare
-  config:
-    publicKey: your-public-key
-
 collections:
-  - name: "compositions"
-    label: "Compositions"
-    folder: "content/compositions"
+  - name: "manuscript"
+    label: "Manuscript & White Papers"
+    folder: "content/manuscript"
     create: true
     extension: "json"
-    slug: "{{collection_type}}-{{slug}}"
-    preview_path: "composition/{{collection_type}}/section/1"
+    format: "json"
+    slug: "{{slug}}"
+    preview_path: "composition/manuscript/section/{{entry.index}}"
     fields:
       - {label: "Title", name: "title", widget: "string"}
       - {
-          label: "Type", 
-          name: "collection_type", 
-          widget: "select",
-          options: [
-            { label: "Manuscript & White Papers", value: "manuscript" },
-            { label: "Data & Evidence", value: "data" },
-            { label: "World Map", value: "map" }
-          ]
+          label: "Type",
+          name: "collection_type",
+          widget: "hidden",
+          default: "manuscript"
         }
       - label: "Sections"
         name: "sections"
         widget: "list"
         allow_add: true
         label_singular: "Section"
-        summary: "{{fields.title}}"
         fields:
           - {label: "Title", name: "title", widget: "string"}
-          - {label: "Featured on Homepage", name: "featured", widget: "boolean", default: false, required: false}
+          - {label: "Featured", name: "featured", widget: "boolean", default: false}
           - label: "Basic Content (Level 1)"
             name: "content_level_1"
             widget: "markdown"
             required: false
-            hint: "Optional - will default to intermediate content if left blank"
-            editor_components: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
-            modes: ["rich_text", "raw"]
           - label: "Intermediate Content (Level 3)"
             name: "content_level_3"
             widget: "markdown"
-            required: true
-            editor_components: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
-            modes: ["rich_text", "raw"]
           - label: "Advanced Content (Level 5)"
             name: "content_level_5"
             widget: "markdown"
             required: false
-            hint: "Optional - will default to intermediate content if left blank"
-            editor_components: ["bold", "italic", "link", "bulleted-list", "numbered-list", "quote"]
-            modes: ["rich_text", "raw"]
 
-local_backend: true
-publish_mode: editorial_workflow
+  - name: "data"
+    label: "Data & Evidence"
+    folder: "content/data"
+    create: true
+    extension: "json"
+    format: "json"
+    slug: "{{slug}}"
+    preview_path: "composition/data/section/{{entry.index}}"
+    fields:
+      - {label: "Title", name: "title", widget: "string"}
+      - {
+          label: "Type",
+          name: "collection_type",
+          widget: "hidden",
+          default: "data"
+        }
+      - label: "Sections"
+        name: "sections"
+        widget: "list"
+        allow_add: true
+        label_singular: "Section"
+        fields:
+          - {label: "Title", name: "title", widget: "string"}
+          - {label: "Featured", name: "featured", widget: "boolean", default: false}
+          - label: "Basic Content (Level 1)"
+            name: "content_level_1"
+            widget: "markdown"
+            required: false
+          - label: "Intermediate Content (Level 3)"
+            name: "content_level_3"
+            widget: "markdown"
+          - label: "Advanced Content (Level 5)"
+            name: "content_level_5"
+            widget: "markdown"
+            required: false

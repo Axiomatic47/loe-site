@@ -6,7 +6,7 @@ const server = new ProxyServer({
   debug: true,
   jwtSecret: "SECRET",
   allowedHosts: ['localhost'],
-  logLevel: 'debug'  // Added for more verbose logging
+  logLevel: 'debug'
 });
 
 try {

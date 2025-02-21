@@ -13,7 +13,7 @@ export const HeroButtons = () => {
         className="group relative w-[300px] bg-black/50 backdrop-blur-md border-2 border-white/20 text-white
                  hover:bg-black/60 hover:border-white/30 transition-all duration-300 py-7 text-lg font-medium
                  rounded-lg overflow-hidden"
-        onClick={() => navigate("/composition/memorandum")}
+        onClick={() => navigate("/composition/manuscript")}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent transform
                       group-hover:scale-105 transition-transform duration-500"/>
@@ -25,7 +25,7 @@ export const HeroButtons = () => {
         className="group relative w-[300px] bg-black/50 backdrop-blur-md border-2 border-white/20 text-white
                  hover:bg-black/60 hover:border-white/30 transition-all duration-300 py-7 text-lg font-medium
                  rounded-lg overflow-hidden"
-        onClick={() => navigate("/map")}
+        onClick={() => navigate("/worldmap")} // Changed to a direct route rather than a composition
       >
         <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent transform
                       group-hover:scale-105 transition-transform duration-500"/>
@@ -37,7 +37,7 @@ export const HeroButtons = () => {
         className="group relative w-[300px] bg-black/50 backdrop-blur-md border-2 border-white/20 text-white
                  hover:bg-black/60 hover:border-white/30 transition-all duration-300 py-7 text-lg font-medium
                  rounded-lg overflow-hidden"
-        onClick={() => navigate("/composition/corrective")}
+        onClick={() => navigate("/composition/data")}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent transform
                       group-hover:scale-105 transition-transform duration-500"/>
@@ -46,5 +46,3 @@ export const HeroButtons = () => {
     </div>
   );
 };
-
-export default HeroButtons;

@@ -19,6 +19,16 @@ app.use(cors({
   credentials: true
 }));
 
+// Add request logging
+app.use((req, res, next) => {
+  console.log('Request:', {
+    method: req.method,
+    path: req.path,
+    body: req.body
+  });
+  next();
+});
+
 // Parse JSON bodies
 app.use(express.json());
 
@@ -58,8 +68,21 @@ app.post('/api/analytics/record', async (req, res) => {
 app.use('/api/v1', createProxyMiddleware({
   target: 'http://localhost:8083',
   changeOrigin: true,
+  pathRewrite: {
+    '^/api/v1': ''
+  },
   onError: (err, req, res) => {
     console.error('CMS Proxy Error:', err);
+    res.writeHead(500, {
+      'Content-Type': 'application/json'
+    });
+    res.end(JSON.stringify({ error: err.message }));
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log('CMS Proxy Response:', {
+      status: proxyRes.statusCode,
+      headers: proxyRes.headers
+    });
   }
 }));
 
