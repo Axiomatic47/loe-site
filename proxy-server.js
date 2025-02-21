@@ -8,14 +8,14 @@ import cors from 'cors';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config();
 
-// Import the CommonJS module using require()
+// Import the analytics service
 const analyticsService = await import('./src/services/proxyAnalytics.cjs');
 
 const app = express();
 
 // Add CORS headers
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:8082'],
+  origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:8082', 'http://localhost:8083'],
   credentials: true
 }));
 
@@ -38,7 +38,7 @@ app.get('/api/analytics', async (req, res) => {
   }
 });
 
-// Handle both analytics record endpoints
+// Handle analytics record endpoints
 app.post('/api/analytics/record', async (req, res) => {
   try {
     console.log('Recording page view:', req.body);
@@ -54,16 +54,15 @@ app.post('/api/analytics/record', async (req, res) => {
   }
 });
 
-// Proxy all other /api requests to port 8081
-app.use('/api', createProxyMiddleware({
-  target: 'http://localhost:8081',
+// Proxy CMS requests to the CMS proxy server
+app.use('/api/cms', createProxyMiddleware({
+  target: 'http://localhost:8083',
   changeOrigin: true,
-  ws: true,
   pathRewrite: {
-    '^/api': ''
+    '^/api/cms': ''
   },
   onError: (err, req, res) => {
-    console.error('Proxy Error:', err);
+    console.error('CMS Proxy Error:', err);
   }
 }));
 
@@ -72,5 +71,5 @@ app.use(express.static('public'));
 
 const PORT = 8082;
 app.listen(PORT, () => {
-  console.log(`Proxy server running on http://localhost:${PORT}`);
+  console.log(`API Proxy server running on http://localhost:${PORT}`);
 });
