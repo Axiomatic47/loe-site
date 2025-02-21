@@ -99,9 +99,30 @@ html {
 
 /* Enhanced text visibility styles */
 @layer components {
+  /* Title specific styles */
+  .site-title {
+    @apply font-serif tracking-tight leading-tight;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .site-title-main {
+    @apply block mb-2;
+  }
+
+  .site-title-secondary {
+    @apply block;
+  }
+
+  .site-subtitle {
+    @apply font-serif tracking-wide font-normal;
+    letter-spacing: 0.01em;
+  }
+
   /* Backdrop blur panel variations */
   .blur-panel {
     @apply relative backdrop-blur-md rounded-lg border border-white/10;
+    background: rgba(0, 0, 0, 0.4);
   }
 
   .blur-panel-light {
