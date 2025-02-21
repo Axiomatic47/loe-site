@@ -56,7 +56,7 @@ export const Header = ({ pullDistance = 0, maxPullDistance = 800 }: HeaderProps)
               "text-white hover:text-gray-300 drop-shadow-lg"
             )}
           >
-            Corporate Veil
+            The Law of Supremacism
           </button>
           <Button
             variant="ghost"

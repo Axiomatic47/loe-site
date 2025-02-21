@@ -36,12 +36,12 @@ const Index = () => {
         <div className="text-center mb-24">
           <BlurPanel className="p-8 sm:p-12 mb-16 max-w-5xl mx-auto">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif mb-6 tracking-tight leading-tight text-white drop-shadow-lg">
-              A Constitutional Analysis
+              The Fundamental Laws of Supremacism
               <br />
-              of Corporate Personhood
+              and Egalitarianism
             </h1>
             <p className="text-lg sm:text-xl text-gray-100 max-w-2xl mx-auto mb-16 leading-relaxed drop-shadow">
-              Explore the legal framework and implications of corporate personhood in constitutional law.
+              Establishing the First Universal Laws of Conflict and Peace in Social Science
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
