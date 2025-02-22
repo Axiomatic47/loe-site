@@ -9,7 +9,6 @@ const PORT = 8083;
 // Enable CORS
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:8082'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
 
@@ -35,10 +34,15 @@ app.get('/collections/:collection', async (req, res) => {
         .filter(file => file.endsWith('.json'))
         .map(async (file) => {
           const content = await fs.readFile(path.join(contentDir, file), 'utf-8');
-          return JSON.parse(content);
+          try {
+            return JSON.parse(content);
+          } catch (e) {
+            console.error(`Error parsing ${file}:`, e);
+            return null;
+          }
         })
     );
-    res.json(contents);
+    res.json(contents.filter(Boolean));
   } catch (error) {
     console.error('Error reading collection:', error);
     res.status(500).json({ error: error.message });
@@ -50,7 +54,7 @@ app.post('/collections/:collection', async (req, res) => {
     const collection = req.params.collection;
     const contentDir = path.join(process.cwd(), 'content', collection);
     const timestamp = Date.now();
-    const filename = `${timestamp}.json`;
+    const filename = `${req.body.title.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.json`;
 
     await fs.mkdir(contentDir, { recursive: true });
     await fs.writeFile(
@@ -82,13 +86,8 @@ app.post('/media', express.raw({ type: '*/*', limit: '50mb' }), async (req, res)
   }
 });
 
-// Serve static files from public uploads
+// Serve static files
 app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
 
 app.listen(PORT, () => {
   console.log(`CMS backend server running on http://localhost:${PORT}`);
