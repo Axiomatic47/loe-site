@@ -1,82 +1,13 @@
 backend:
-  name: git-gateway
-  branch: main
-
-local_backend: true
-publish_mode: editorial_workflow
-
-media_folder: "public/uploads"
-public_folder: "/uploads"
-
+  name: test-repo
+media_folder: public/uploads
+public_folder: /uploads
 collections:
-  - name: "manuscript"
-    label: "Manuscript & White Papers"
-    folder: "content/manuscript"
-    create: true
-    extension: "json"
-    format: "json"
-    slug: "{{slug}}"
-    preview_path: "composition/manuscript/section/{{entry.index}}"
-    fields:
-      - {label: "Title", name: "title", widget: "string"}
-      - {
-          label: "Type",
-          name: "collection_type",
-          widget: "hidden",
-          default: "manuscript"
-        }
-      - label: "Sections"
-        name: "sections"
-        widget: "list"
-        allow_add: true
-        label_singular: "Section"
+  - name: placeholder
+    label: Placeholder
+    files:
+      - name: placeholder
+        label: Placeholder
+        file: "content/placeholder.md"
         fields:
-          - {label: "Title", name: "title", widget: "string"}
-          - {label: "Featured", name: "featured", widget: "boolean", default: false}
-          - label: "Basic Content (Level 1)"
-            name: "content_level_1"
-            widget: "markdown"
-            required: false
-          - label: "Intermediate Content (Level 3)"
-            name: "content_level_3"
-            widget: "markdown"
-          - label: "Advanced Content (Level 5)"
-            name: "content_level_5"
-            widget: "markdown"
-            required: false
-
-  - name: "data"
-    label: "Data & Evidence"
-    folder: "content/data"
-    create: true
-    extension: "json"
-    format: "json"
-    slug: "{{slug}}"
-    preview_path: "composition/data/section/{{entry.index}}"
-    fields:
-      - {label: "Title", name: "title", widget: "string"}
-      - {
-          label: "Type",
-          name: "collection_type",
-          widget: "hidden",
-          default: "data"
-        }
-      - label: "Sections"
-        name: "sections"
-        widget: "list"
-        allow_add: true
-        label_singular: "Section"
-        fields:
-          - {label: "Title", name: "title", widget: "string"}
-          - {label: "Featured", name: "featured", widget: "boolean", default: false}
-          - label: "Basic Content (Level 1)"
-            name: "content_level_1"
-            widget: "markdown"
-            required: false
-          - label: "Intermediate Content (Level 3)"
-            name: "content_level_3"
-            widget: "markdown"
-          - label: "Advanced Content (Level 5)"
-            name: "content_level_5"
-            widget: "markdown"
-            required: false
+          - {label: Title, name: title, widget: string}

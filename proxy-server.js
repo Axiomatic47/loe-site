@@ -15,7 +15,7 @@ const app = express();
 
 // Add CORS headers
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:8082', 'http://localhost:8083'],
+  origin: ['http://localhost:3000', 'http://localhost:8082', 'http://localhost:8083'],
   credentials: true
 }));
 
@@ -64,12 +64,14 @@ app.post('/api/analytics/record', async (req, res) => {
   }
 });
 
-// Proxy CMS requests to the CMS proxy server
+// Proxy CMS requests to the CMS server
 app.use('/api/v1', createProxyMiddleware({
   target: 'http://localhost:8083',
   changeOrigin: true,
+  secure: false,
+  ws: true,
   pathRewrite: {
-    '^/api/v1': ''
+    '^/api/v1': '/api'
   },
   onError: (err, req, res) => {
     console.error('CMS Proxy Error:', err);
