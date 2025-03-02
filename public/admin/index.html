@@ -1,156 +1,106 @@
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Content Manager</title>
-  <link href="/admin/preview.css" rel="stylesheet" />
-  <style>
-    body {
-      margin: 0;
-      background-color: #1a1a1a;
-      color: #ffffff;
-    }
-  </style>
-</head>
-<body>
-  <script>
-    window.CMS_MANUAL_INIT = true;
-  </script>
-  <script src="https://unpkg.com/netlify-cms@2.10.192/dist/netlify-cms.js"></script>
-  <script>
-    const config = {
-      backend: {
-        name: "test-repo",
-        branch: "main"
-      },
-      load_config_file: false,
-      local_backend: true,
-      publish_mode: "simple",
-      media_folder: "public/uploads",
-      public_folder: "/uploads",
-      collections: [
-        {
-          name: "manuscript",
-          label: "Manuscript & White Papers",
-          label_singular: "Manuscript",
-          folder: "content/manuscript",
-          create: true,
-          slug: "{{slug}}",
-          fields: [
-            {
-              label: "Title",
-              name: "title",
-              widget: "string"
-            },
-            {
-              label: "Type",
-              name: "collection_type",
-              widget: "hidden",
-              default: "manuscript"
-            },
-            {
-              label: "Sections",
-              name: "sections",
-              widget: "list",
-              allow_add: true,
-              fields: [
-                {
-                  label: "Title",
-                  name: "title",
-                  widget: "string"
-                },
-                {
-                  label: "Featured",
-                  name: "featured",
-                  widget: "boolean",
-                  default: false
-                },
-                {
-                  label: "Basic Content (Level 1)",
-                  name: "content_level_1",
-                  widget: "markdown",
-                  required: false
-                },
-                {
-                  label: "Intermediate Content (Level 3)",
-                  name: "content_level_3",
-                  widget: "markdown"
-                },
-                {
-                  label: "Advanced Content (Level 5)",
-                  name: "content_level_5",
-                  widget: "markdown",
-                  required: false
-                }
-              ]
-            }
-          ]
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Content Manager</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/netlify-cms@^2.10.192/dist/netlify-cms.js"></script>
+    <script>
+      const config = {
+        backend: {
+          name: "test-repo"
         },
-        {
-          name: "data",
-          label: "Data & Evidence",
-          label_singular: "Data Entry",
-          folder: "content/data",
-          create: true,
-          slug: "{{slug}}",
-          fields: [
-            {
-              label: "Title",
-              name: "title",
-              widget: "string"
-            },
-            {
-              label: "Type",
-              name: "collection_type",
-              widget: "hidden",
-              default: "data"
-            },
-            {
-              label: "Sections",
-              name: "sections",
-              widget: "list",
-              allow_add: true,
-              fields: [
-                {
-                  label: "Title",
-                  name: "title",
-                  widget: "string"
-                },
-                {
-                  label: "Featured",
-                  name: "featured",
-                  widget: "boolean",
-                  default: false
-                },
-                {
-                  label: "Basic Content (Level 1)",
-                  name: "content_level_1",
-                  widget: "markdown",
-                  required: false
-                },
-                {
-                  label: "Intermediate Content (Level 3)",
-                  name: "content_level_3",
-                  widget: "markdown"
-                },
-                {
-                  label: "Advanced Content (Level 5)",
-                  name: "content_level_5",
-                  widget: "markdown",
-                  required: false
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    };
+        local_backend: {
+          url: "http://localhost:8081" // Ensure this matches your proxy server port
+        },
+        media_folder: "public/uploads",
+        public_folder: "/uploads",
+        collections: [
+          {
+            name: "manuscript",
+            label: "Manuscript & White Papers",
+            folder: "content/manuscript",
+            create: true,
+            format: "json",
+            identifier_field: "title",
+            fields: [
+              {label: "Title", name: "title", widget: "string"},
+              {label: "Collection Type", name: "collection_type", widget: "hidden", default: "manuscript"},
+              {
+                label: "Sections",
+                name: "sections",
+                widget: "list",
+                allow_add: true,
+                fields: [
+                  {label: "Title", name: "title", widget: "string"},
+                  {label: "Featured", name: "featured", widget: "boolean", default: false},
+                  {
+                    label: "Basic Content (Level 1)",
+                    name: "content_level_1",
+                    widget: "markdown",
+                    required: false
+                  },
+                  {
+                    label: "Intermediate Content (Level 3)",
+                    name: "content_level_3",
+                    widget: "markdown"
+                  },
+                  {
+                    label: "Advanced Content (Level 5)",
+                    name: "content_level_5",
+                    widget: "markdown",
+                    required: false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            name: "data",
+            label: "Data & Evidence",
+            folder: "content/data",
+            create: true,
+            format: "json",
+            identifier_field: "title",
+            fields: [
+              {label: "Title", name: "title", widget: "string"},
+              {label: "Collection Type", name: "collection_type", widget: "hidden", default: "data"},
+              {
+                label: "Sections",
+                name: "sections",
+                widget: "list",
+                allow_add: true,
+                fields: [
+                  {label: "Title", name: "title", widget: "string"},
+                  {label: "Featured", name: "featured", widget: "boolean", default: false},
+                  {
+                    label: "Basic Content (Level 1)",
+                    name: "content_level_1",
+                    widget: "markdown",
+                    required: false
+                  },
+                  {
+                    label: "Intermediate Content (Level 3)",
+                    name: "content_level_3",
+                    widget: "markdown"
+                  },
+                  {
+                    label: "Advanced Content (Level 5)",
+                    name: "content_level_5",
+                    widget: "markdown",
+                    required: false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
 
-    // Initialize CMS with config
-    window.addEventListener('load', function() {
+      // Initialize the CMS
       CMS.init({ config });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

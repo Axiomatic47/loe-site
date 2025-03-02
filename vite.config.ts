@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -11,16 +11,8 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8082',
-        changeOrigin: true,
-      },
-      '/api/v1': {
-        target: 'http://localhost:8082',
-        changeOrigin: true,
-      }
-    },
+    open: false,
+    historyApiFallback: true
   },
   build: {
     rollupOptions: {
@@ -30,4 +22,4 @@ export default defineConfig({
       },
     },
   },
-})
+});

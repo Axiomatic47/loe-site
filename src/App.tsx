@@ -5,14 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from 'react';
-import PageViewRecorder from "./components/PageViewRecorder";
 import Index from "./pages/Index";
 import CompositionsPage from "./pages/CompositionsPage";
 import SectionPage from "./pages/SectionPage";
 import Contact from "./pages/Contact";
 import Partners from "./pages/Partners";
 import Donate from "./pages/Donate";
-// We'll create this component later
 import WorldMap from "./pages/WorldMap";
 
 const queryClient = new QueryClient();
@@ -31,7 +29,6 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <PageViewRecorder />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/composition/:compositionId" element={<CompositionsPage />} />

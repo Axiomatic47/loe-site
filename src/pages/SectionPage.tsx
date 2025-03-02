@@ -15,12 +15,12 @@ const SectionPage = () => {
   const [literacyLevel, setLiteracyLevel] = useState(3);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { memorandum, corrective, refreshCompositions } = useCompositionStore();
+  const store = useCompositionStore();
   const { isSidebarOpen, setIsSidebarOpen, isMobile } = useMobileNavigation();
 
   useEffect(() => {
-    refreshCompositions();
-  }, [refreshCompositions]);
+    store.refreshCompositions();
+  }, [store]);
 
   useEffect(() => {
     window.scrollTo({
@@ -29,7 +29,34 @@ const SectionPage = () => {
     });
   }, [sectionId]);
 
-  const compositions = compositionId === "memorandum" ? memorandum : corrective;
+  // Get compositions based on the ID
+  const getCompositions = () => {
+    switch (compositionId) {
+      case "manuscript":
+        return store.manuscript;
+      case "data":
+        return store.data;
+      case "map":
+        return store.map;
+      default:
+        return [];
+    }
+  };
+
+  const getCollectionTitle = (collectionType: string) => {
+    switch (collectionType) {
+      case "manuscript":
+        return "Manuscript & White Papers";
+      case "data":
+        return "Data & Evidence";
+      case "map":
+        return "World Map";
+      default:
+        return "Content";
+    }
+  };
+
+  const compositions = getCompositions();
   const currentComposition = compositions[parseInt(compositionIndex) - 1];
   const currentSection = currentComposition?.sections?.[parseInt(sectionId) - 1];
 
@@ -118,7 +145,7 @@ const SectionPage = () => {
             <div className="p-6">
               <div className="mb-6">
                 <h2 className="text-lg font-serif text-white drop-shadow-lg mb-1">
-                  {compositionId === "memorandum" ? "Memorandum and Manifestation" : "Corrective Measures"}
+                  {getCollectionTitle(compositionId)}
                 </h2>
                 <h3 className="text-sm text-gray-200">{currentComposition.title}</h3>
               </div>
