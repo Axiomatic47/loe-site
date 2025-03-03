@@ -38,6 +38,49 @@ const getCategory = (score) => {
   return "Strong Supremacism";
 };
 
+// This patches Leaflet.heat to fix the canvas warning
+const patchLeafletHeat = () => {
+  if (!window.L || !window.L.heatLayer) return;
+
+  // Store the original draw method
+  const originalDraw = window.L.HeatLayer.prototype._draw;
+
+  // Replace with patched version that sets willReadFrequently
+  window.L.HeatLayer.prototype._draw = function() {
+    // Ensure canvas context has willReadFrequently set
+    if (this._canvas && this._canvas.getContext) {
+      const existingContext = this._canvas.getContext('2d');
+
+      // Only recreate context if the attribute isn't already set
+      if (!existingContext.willReadFrequently) {
+        // Force recreation of context with willReadFrequently
+        const canvas = this._canvas;
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Create new canvas and copy content
+        const newCanvas = document.createElement('canvas');
+        newCanvas.width = width;
+        newCanvas.height = height;
+        const newCtx = newCanvas.getContext('2d', { willReadFrequently: true });
+
+        // Copy attributes from old canvas
+        newCanvas.style.cssText = canvas.style.cssText;
+        newCanvas.className = canvas.className;
+
+        // Replace old canvas with new one
+        if (canvas.parentNode) {
+          canvas.parentNode.replaceChild(newCanvas, canvas);
+          this._canvas = newCanvas;
+        }
+      }
+    }
+
+    // Call original draw method
+    return originalDraw.apply(this, arguments);
+  };
+};
+
 const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -69,6 +112,8 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
           heatScript.src = 'https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js';
           heatScript.async = true;
           heatScript.onload = () => {
+            // Patch Leaflet.heat before setting scriptLoaded
+            patchLeafletHeat();
             setScriptLoaded(true);
           };
           document.body.appendChild(heatScript);
@@ -102,9 +147,9 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         maxZoom: 6,
         maxBounds: [[-90, -195], [90, 195]], // Slightly wider bounds for better view
         maxBoundsViscosity: 1.0, // Prevent dragging outside bounds
-        worldCopyJump: false, // Disable world copying when panning
+        worldCopyJump: true, // Enable world copying when panning
         zoomControl: false, // We'll add custom zoom controls
-        attributionControl: false, // We'll add custom attribution
+        attributionControl: true, // We'll add attribution
         scrollWheelZoom: 'center', // Zoom to cursor position
         zoomDelta: 0.5, // Smoother zoom steps
         zoomSnap: 0.25, // Finer zoom level snapping
@@ -113,18 +158,11 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         easeLinearity: 0.1 // Make zooming feel more natural
       });
 
-      // Add light-themed base map
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      // Add map tiles with a dark theme for better contrast with the heatmap
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
-        maxZoom: 20,
-        noWrap: true, // Prevent the map from repeating horizontally
-      }).addTo(mapInstanceRef.current);
-
-      // Add attribution in a subtle way
-      L.control.attribution({
-        position: 'bottomright',
-        prefix: ''
+        maxZoom: 20
       }).addTo(mapInstanceRef.current);
 
       // Custom zoom controls
@@ -256,6 +294,11 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
             color: rgba(255, 255, 255, 0.6);
             text-align: center;
           }
+
+          /* Fix for canvas elements to add willReadFrequently */
+          canvas.leaflet-heatmap-layer {
+            will-change: contents;
+          }
         `;
         document.head.appendChild(style);
       }
@@ -297,25 +340,16 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
           intensity = (rawIntensity - 5) * 1.4 + 7;
         }
 
-        // Log what we're doing with the country data
-        console.log(`Country: ${country.country || country.name || country.code},
-                    Coords: [${lat}, ${lng}],
-                    Original value: ${rawIntensity},
-                    Mapped intensity: ${intensity}`);
-
         // Return [lat, lng, intensity] format required by Leaflet.heat
         return [lat, lng, intensity];
       }).filter(point => point[0] !== 0 && point[1] !== 0); // Filter out points with zero coordinates
 
-      // Log the heat data for debugging
-      console.log("Heatmap data points:", heatData);
-
       // Create heat layer with custom gradient - with enhanced visibility
-      heatLayerRef.current = L.heatLayer(heatData, {
+      const heatOptions = {
         radius: 40, // Increased size for better visibility
         blur: 30, // Increased blur for smoother gradient
         maxZoom: 10, // Max zoom level for heat points
-        max: 10, // Max intensity value (matching the SGM 0-10 scale)
+        max: 14, // Max intensity value (matching our scaled intensity)
         minOpacity: 0.5, // Minimum opacity to ensure visibility
         // Custom gradient - blue (egalitarianism) to red (supremacism)
         gradient: {
@@ -326,7 +360,9 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
           0.8: '#ff5500', // Orange-red - strong supremacism
           1.0: '#ff0000'  // Deep red - strongest supremacism
         }
-      }).addTo(mapInstanceRef.current);
+      };
+
+      heatLayerRef.current = L.heatLayer(heatData, heatOptions).addTo(mapInstanceRef.current);
 
       // Add clickable markers on top of the heatmap for country selection
       countries.forEach(country => {
@@ -421,7 +457,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [mapInstanceRef.current, scriptLoaded]);
+  }, [scriptLoaded]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -441,13 +477,11 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     if (!scriptLoaded) return;
 
     const handleFullscreenChange = () => {
-      console.log("Fullscreen state changed");
       try {
         if (mapInstanceRef.current) {
           // Need to wait a moment for the browser to adjust the size
           setTimeout(() => {
             mapInstanceRef.current.invalidateSize();
-            console.log("Map size invalidated after fullscreen change");
           }, 200);
         }
       } catch (error) {
@@ -470,7 +504,6 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
 
   // Define handleResetView as a useCallback to avoid recreation on each render
   const handleResetView = useCallback(() => {
-    console.log("handleResetView called", mapInstanceRef.current);
     if (!mapInstanceRef.current || !window.L) return;
 
     try {
@@ -490,7 +523,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     } catch (error) {
       console.error("Error in handleResetView:", error);
     }
-  }, [mapInstanceRef]);
+  }, []);
 
   return (
     <div className="bg-black/30 p-4 rounded-lg border border-white/10 mt-4">
@@ -502,30 +535,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
             variant="outline"
             size="sm"
             className="bg-black/50 text-white border-white/20 hover:bg-black/70"
-            onClick={() => {
-              console.log("Reset view clicked", mapInstanceRef.current);
-              if (!mapInstanceRef.current) return;
-
-              try {
-                // Use world bounds that will show the entire world
-                const L = window.L;
-                if (!L) return;
-
-                const worldBounds = L.latLngBounds(
-                  L.latLng(-60, -170), // Southwest corner - excluding Antarctica for better fit
-                  L.latLng(75, 170)    // Northeast corner - excluding northernmost areas
-                );
-
-                mapInstanceRef.current.fitBounds(worldBounds, {
-                  animate: true,
-                  duration: 0.75,
-                  easeLinearity: 0.25,
-                  padding: [10, 10] // Add a bit of padding
-                });
-              } catch (error) {
-                console.error("Error resetting view:", error);
-              }
-            }}
+            onClick={handleResetView}
             disabled={!scriptLoaded}
           >
             Reset View
@@ -535,13 +545,11 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
             size="sm"
             className="bg-black/50 text-white border-white/20 hover:bg-black/70"
             onClick={() => {
-              console.log("Fullscreen clicked", mapRef.current);
               try {
                 const mapContainer = mapRef.current;
                 if (!mapContainer) return;
 
                 if (!document.fullscreenElement) {
-                  console.log("Entering fullscreen mode");
                   if (mapContainer.requestFullscreen) {
                     mapContainer.requestFullscreen().catch(err => console.error("Fullscreen error:", err));
                   } else if (mapContainer.webkitRequestFullscreen) {
@@ -550,7 +558,6 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
                     mapContainer.msRequestFullscreen();
                   }
                 } else {
-                  console.log("Exiting fullscreen mode");
                   if (document.exitFullscreen) {
                     document.exitFullscreen().catch(err => console.error("Exit fullscreen error:", err));
                   } else if (document.webkitExitFullscreen) {
@@ -574,8 +581,9 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
       <div className="relative h-96 md:h-[450px] lg:h-[500px] rounded-lg overflow-hidden shadow-lg">
         <div
           ref={mapRef}
-          className="h-full w-full bg-white relative"
+          className="h-full w-full bg-gray-900 relative"
           id="map-container" // Added ID for easier selection
+          style={{ willReadFrequently: true }} // Fix for Canvas2D readback warning
         />
 
         {(isLoading || !scriptLoaded) && (

@@ -1,89 +1,123 @@
-# Welcome to your Lovable project
+# Law of Supremacism-Egalitarianism Global Tracking System
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/491ca80e-09dc-401d-87db-bb3dec3fc2b2
+This project implements the Supremacist Governance Methodology (SGM) to quantify, visualize, and analyze governance structures worldwide. Based on the Fundamental Laws of Supremacism and Egalitarianism, this system measures how governance ranges from egalitarian to supremacist, both domestically and internationally.
 
-## How can I edit this code?
+The project consists of two main components:
+1. A FastAPI backend that processes GDELT data and calculates SGM scores
+2. A React frontend that visualizes this data on an interactive global map
 
-There are several ways of editing your application.
+## Project Structure
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/491ca80e-09dc-401d-87db-bb3dec3fc2b2) and start prompting.
-
-Changes made via Lovable will be committed automatically to your GitHub repository.
-
-**Connect to GitHub**
-
-1. Create a new repository on GitHub
-2. Initialize Git in your project (if not already done):
-```sh
-git init
+```
+project/
+├── api/                      # FastAPI backend
+│   ├── app/                  # Application code
+│   │   ├── api_routes/       # API endpoints
+│   │   ├── api_services/     # Service layer
+│   │   └── main.py           # FastAPI application entry point
+│   ├── core/                 # Core functionality
+│   │   ├── sgm_data_service.py  # SGM implementation
+│   │   ├── bigquery_client.py   # GDELT BigQuery client
+│   │   └── nlp_pipeline.py      # NLP processing for GDELT data
+│   ├── database/             # Database operations
+│   ├── data/                 # Sample data for testing
+│   └── requirements.txt      # Python dependencies
+│
+└── frontend/                 # React frontend
+    ├── src/                  # Source code
+    │   ├── components/       # React components
+    │   │   └── LeafletHeatMap.jsx  # Map visualization
+    │   ├── lib/              # Utility functions
+    │   │   └── gdeltApi.ts   # API client
+    │   └── pages/            # Page components
+    │       └── WorldMap.tsx  # Main map page
+    ├── public/               # Static assets
+    └── package.json          # JavaScript dependencies
 ```
 
-3. Add your GitHub repository as remote:
-```sh
-git remote add origin https://github.com/yourusername/your-repo-name.git
-```
+## Setup Instructions
 
-4. Add and commit your files:
-```sh
-git add .
-git commit -m "Initial commit"
-```
+### Backend Setup
 
-5. Push to GitHub:
-```sh
-git push -u origin main
-```
+1. Create a Python virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-**Use your preferred IDE**
+2. Install the required packages:
+   ```
+   pip install -r requirements.txt
+   ```
 
-Once connected to GitHub, you can clone and work locally:
+3. Create a data directory for sample data:
+   ```
+   mkdir -p data
+   ```
 
-```sh
-# Step 1: Clone the repository using your GitHub URL
-git clone https://github.com/yourusername/your-repo-name.git
+4. Copy the sample_countries.json file to the data directory:
+   ```
+   cp sample_countries.json data/
+   ```
 
-# Step 2: Navigate to the project directory
-cd your-repo-name
+5. Start the FastAPI server:
+   ```
+   uvicorn app.main:app --reload --port 4041
+   ```
 
-# Step 3: Install the necessary dependencies
-npm i
+### Frontend Setup
 
-# Step 4: Start the development server with auto-reloading and an instant preview
-npm run dev
-```
+1. Install the necessary npm packages:
+   ```
+   npm install
+   ```
 
-**Edit a file directly in GitHub**
+2. Create a `.env` file with the API URL:
+   ```
+   echo "VITE_API_URL=http://localhost:4041" > .env
+   ```
 
-- Navigate to your repository on GitHub
-- Click on the desired file
-- Click the "Edit" button (pencil icon)
-- Make your changes and commit them
+3. Start the development server:
+   ```
+   npm run dev
+   ```
 
-**Use GitHub Codespaces**
+4. Open your browser and navigate to http://localhost:3000/worldmap
 
-- Navigate to your repository on GitHub
-- Click on "Code" (green button)
-- Select "Codespaces"
-- Click "New codespace"
+## Key Features
 
-## What technologies are used for this project?
+- **Interactive World Map**: Visualizes the global distribution of supremacist and egalitarian governance using a heatmap
+- **Country Analysis**: Detailed breakdown of each country's SGM metrics
+- **Dual Scoring**: Separate analysis of domestic (SRS-D) and international (SRS-I) supremacist tendencies
+- **GDELT Integration**: Real-time data analysis from the GDELT Project
+- **Stability and Transition Index (STI)**: Tracking governance transitions
 
-This project is built with:
+## Data Flow
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. GDELT data is fetched and analyzed through the Python backend
+2. The SGM methodology is applied to calculate country scores
+3. This data is exposed through RESTful API endpoints
+4. The React frontend fetches and visualizes this data
+5. Users can trigger new analyses, view detailed country reports, and download the data
 
-## How can I deploy this project?
+## Methodology Implementation
 
-Simply open [Lovable](https://lovable.dev/projects/491ca80e-09dc-401d-87db-bb3dec3fc2b2) and click on Share -> Publish.
+The SGM implementation follows the methodology outlined in "Section 10: Methodology for Identifying and Assessing Supremacism and Egalitarianism," particularly:
 
-## I want to use a custom domain - is that possible?
+- **Supremacism Spectrum**: Categorizing governance from overtly supremacist to egalitarian
+- **Dual Risk Scores**: Distinguishing domestic from international supremacist patterns
+- **GSCS/SGM Integration**: Combining domestic and international scores into a single metric
+- **Stability Tracking**: Measuring governance trends over time
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+## Development Notes
+
+- For local development, the API can be accessed at http://localhost:4041/docs
+- Sample data is used when the GDELT API is unavailable
+- The map uses Leaflet with a heatmap layer for visualization
+- For production deployment, update the CORS settings in main.py
+
+## Credits
+
+This project implements the theoretical framework of the Fundamental Laws of Supremacism and Egalitarianism, applying these concepts to real-world data analysis.
