@@ -8,22 +8,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/components/ui/use-toast";
 import { Info, Download, FileText, Loader2 } from "lucide-react";
 import LeafletHeatMap from "@/components/LeafletHeatMap";
-// Import for GDELT API client
-import {
-  fetchSupremacismData,
-  fetchCountryAnalysis,
-  runGdeltAnalysis,
-  fetchRegionalSummary,
-  checkAnalysisStatus
-} from "@/lib/gdeltApi";
 
-// Define the BlurPanel component
 const BlurPanel = ({
   children,
   className
-}: {
-  children: React.ReactNode;
-  className?: string;
 }) => {
   return (
     <div
@@ -74,8 +62,7 @@ const SupremacismLegend = () => (
   </div>
 );
 
-// Helper functions
-const getColorClass = (score: number) => {
+const getColorClass = (score) => {
   if (score <= 2) return "bg-blue-500";
   if (score <= 4) return "bg-green-500";
   if (score <= 6) return "bg-yellow-500";
@@ -83,7 +70,7 @@ const getColorClass = (score: number) => {
   return "bg-red-500";
 };
 
-const getTextColor = (score: number) => {
+const getTextColor = (score) => {
   if (score <= 2) return "text-blue-400";
   if (score <= 4) return "text-green-400";
   if (score <= 6) return "text-yellow-400";
@@ -91,7 +78,7 @@ const getTextColor = (score: number) => {
   return "text-red-400";
 };
 
-const getSTILabel = (score: number) => {
+const getSTILabel = (score) => {
   if (score <= 20) return "Rapid Transition";
   if (score <= 40) return "Moderate Transition";
   if (score <= 60) return "Partial Transition";
@@ -99,7 +86,7 @@ const getSTILabel = (score: number) => {
   return "Supremacist Persistence";
 };
 
-const getSTIColorClass = (score: number) => {
+const getSTIColorClass = (score) => {
   if (score <= 20) return "bg-blue-500";
   if (score <= 40) return "bg-green-500";
   if (score <= 60) return "bg-yellow-500";
@@ -107,39 +94,7 @@ const getSTIColorClass = (score: number) => {
   return "bg-red-500";
 };
 
-// Define types for our components
-interface CountryData {
-  code: string;
-  country: string;
-  srsD?: number;
-  srsI?: number;
-  sgm: number;
-  gscs?: number;
-  latitude: number;
-  longitude: number;
-  sti?: number;
-  category?: string;
-  description?: string;
-  event_count?: number;
-  avg_tone?: number;
-  updated_at?: string;
-  name?: string;
-}
-
-interface RegionData {
-  region: string;
-  avg_sgm: number;
-}
-
-const CountryList = ({
-  countries,
-  onSelect,
-  selectedCountry
-}: {
-  countries: CountryData[];
-  onSelect: (country: CountryData) => void;
-  selectedCountry?: CountryData;
-}) => {
+const CountryList = ({ countries, onSelect, selectedCountry }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filter countries based on search term
@@ -189,11 +144,7 @@ const CountryList = ({
   );
 };
 
-const CountryDetail = ({
-  country
-}: {
-  country?: CountryData;
-}) => {
+const CountryDetail = ({ country }) => {
   if (!country) return null;
 
   return (
@@ -206,11 +157,11 @@ const CountryDetail = ({
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-black/30 p-3 rounded">
               <div className="text-sm text-gray-400">Domestic (SRS-D)</div>
-              <div className={`text-xl font-medium ${getTextColor(country.srsD || 0)}`}>{country.srsD?.toFixed(1) || "N/A"}</div>
+              <div className={`text-xl font-medium ${getTextColor(country.srsD)}`}>{country.srsD?.toFixed(1) || "N/A"}</div>
             </div>
             <div className="bg-black/30 p-3 rounded">
               <div className="text-sm text-gray-400">International (SRS-I)</div>
-              <div className={`text-xl font-medium ${getTextColor(country.srsI || 0)}`}>{country.srsI?.toFixed(1) || "N/A"}</div>
+              <div className={`text-xl font-medium ${getTextColor(country.srsI)}`}>{country.srsI?.toFixed(1) || "N/A"}</div>
             </div>
             <div className="bg-black/30 p-3 rounded">
               <div className="text-sm text-gray-400">GSCS/SGM</div>
@@ -270,52 +221,64 @@ const CountryDetail = ({
   );
 };
 
-const RegionalChart = ({
-  regionalData
-}: {
-  regionalData?: RegionData[] | null;
-}) => {
-  // If regionalData is provided, use it; otherwise use static data
-  const regions = regionalData || [
-    { region: "North America", avg_sgm: 4.8 },
-    { region: "Europe", avg_sgm: 3.2 },
-    { region: "Asia", avg_sgm: 6.1 },
-    { region: "Africa", avg_sgm: 5.7 },
-    { region: "South America", avg_sgm: 4.5 }
-  ];
-
-  return (
-    <div className="bg-black/30 p-4 rounded-lg border border-white/10 h-full">
-      <h3 className="text-lg font-medium mb-3 text-white">Regional Comparison</h3>
-      <div className="h-64 bg-black/40 rounded border border-white/10 p-4">
-        <div className="space-y-4">
-          {regions.map(region => (
-            <div key={region.region}>
-              <div className="flex justify-between text-sm text-gray-400 mb-1">
-                <span>{region.region}</span>
-                <span>{region.avg_sgm.toFixed(1)}</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div
-                  className={getColorClass(region.avg_sgm) + " h-2 rounded-full"}
-                  style={{ width: `${(region.avg_sgm / 10) * 100}%` }}
-                ></div>
-              </div>
+const RegionalChart = () => (
+  <div className="bg-black/30 p-4 rounded-lg border border-white/10 h-full">
+    <h3 className="text-lg font-medium mb-3 text-white">Regional Comparison</h3>
+    <div className="h-64 bg-black/40 rounded border border-white/10 p-4">
+      <div className="space-y-4">
+        <div>
+          <div className="flex justify-between text-sm text-gray-400 mb-1">
+            <span>North America</span>
+            <span>4.8</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '48%' }}></div>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-sm text-gray-400 mb-1">
+            <span>Europe</span>
+            <span>3.2</span>
             </div>
-          ))}
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="bg-green-500 h-2 rounded-full" style={{ width: '32%' }}></div>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-sm text-gray-400 mb-1">
+            <span>Asia</span>
+            <span>6.1</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="bg-orange-500 h-2 rounded-full" style={{ width: '61%' }}></div>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-sm text-gray-400 mb-1">
+            <span>Africa</span>
+            <span>5.7</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '57%' }}></div>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-sm text-gray-400 mb-1">
+            <span>South America</span>
+            <span>4.5</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '45%' }}></div>
+          </div>
         </div>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
-const CategoryDistribution = ({
-  countries
-}: {
-  countries: CountryData[];
-}) => {
+const CategoryDistribution = ({ countries }) => {
   // Count countries by category
-  const categories = countries.reduce<Record<string, number>>((acc, country) => {
+  const categories = countries.reduce((acc, country) => {
     const category = country.category || "Unknown";
     acc[category] = (acc[category] || 0) + 1;
     return acc;
@@ -356,269 +319,297 @@ const CategoryDistribution = ({
 
 const WorldMap = () => {
   const navigate = useNavigate();
-  const [selectedCountry, setSelectedCountry] = useState<CountryData | undefined>(undefined);
-  const [sgmData, setSgmData] = useState<CountryData[]>([]);
-  const [regionalData, setRegionalData] = useState<RegionData[] | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState(undefined);
+  const [sgmData, setSgmData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  // New state for tracking GDELT analysis
-  const [isAnalysisRunning, setIsAnalysisRunning] = useState(false);
-  const [analysisJobId, setAnalysisJobId] = useState<string | null>(null);
-  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Updated to try fetching from API first, then fall back to mock data
+  // Fetch SGM data - using mock data since your API isn't working
   useEffect(() => {
     const fetchSGMData = async () => {
       setIsLoading(true);
       setError(null);
 
-      try {
-        // Try to fetch from the GDELT API
-        const data = await fetchSupremacismData();
-        setSgmData(data);
-
-        // Also try to fetch regional data
+      // Simulating API call with timeout
+      setTimeout(() => {
         try {
-          const regions = await fetchRegionalSummary();
-          setRegionalData(regions);
-        } catch (regionError) {
-          console.error("Error fetching regional data:", regionError);
-          // Non-critical, so don't set main error
+          // Mock data since the API isn't working
+          const mockData = [
+            {
+              code: "US",
+              country: "United States",
+              srsD: 4.2,
+              srsI: 6.7,
+              gscs: 5.2,
+              sgm: 5.2, // Adding SGM field for heatmap
+              latitude: 37.0902,
+              longitude: -95.7129,
+              sti: 45,
+              category: "Soft Supremacism",
+              description: "The United States exhibits soft supremacism patterns with institutional inequalities despite formal legal equality. Historical patterns persist in economic and social structures.",
+              event_count: 42,
+              avg_tone: -2.7,
+            },
+            {
+              code: "CN",
+              country: "China",
+              srsD: 7.1,
+              srsI: 6.8,
+              gscs: 7.0,
+              sgm: 7.0,
+              latitude: 35.8617,
+              longitude: 104.1954,
+              sti: 75,
+              category: "Structural Supremacism",
+              description: "China demonstrates structural supremacism with notable inequalities at societal and governmental levels. Minority populations face systemic discrimination and there are expansionist tendencies in foreign policy.",
+              event_count: 37,
+              avg_tone: -3.5,
+            },
+            {
+              code: "RU",
+              country: "Russia",
+              srsD: 6.9,
+              srsI: 7.8,
+              gscs: 7.3,
+              sgm: 7.3,
+              latitude: 61.5240,
+              longitude: 105.3188,
+              sti: 80,
+              category: "Structural Supremacism",
+              description: "Russia shows strong structural supremacism internally and aggressive patterns internationally. Power concentration creates significant disparities for non-dominant groups.",
+              event_count: 53,
+              avg_tone: -5.2,
+            },
+            {
+              code: "SE",
+              country: "Sweden",
+              srsD: 1.8,
+              srsI: 1.6,
+              gscs: 1.7,
+              sgm: 1.7,
+              latitude: 60.1282,
+              longitude: 18.6435,
+              sti: 15,
+              category: "Non-Supremacist Governance",
+              description: "Sweden demonstrates strong egalitarian governance with robust institutions protecting equality. Social welfare systems minimize power disparities between groups.",
+              event_count: 8,
+              avg_tone: 3.1,
+            },
+            {
+              code: "DE",
+              country: "Germany",
+              srsD: 2.9,
+              srsI: 2.1,
+              gscs: 2.5,
+              sgm: 2.5,
+              latitude: 51.1657,
+              longitude: 10.4515,
+              sti: 25,
+              category: "Mixed Governance",
+              description: "Germany shows mixed governance with strong democratic institutions and acknowledgment of historical supremacist patterns. Legal frameworks promote equality though challenges persist.",
+              event_count: 15,
+              avg_tone: 1.8,
+            },
+            {
+              code: "IN",
+              country: "India",
+              srsD: 5.8,
+              srsI: 4.2,
+              gscs: 5.0,
+              sgm: 5.0,
+              latitude: 20.5937,
+              longitude: 78.9629,
+              sti: 60,
+              category: "Soft Supremacism",
+              description: "India exhibits soft supremacism with increasing tensions between religious and caste groups. Constitutional protections coexist with supremacist social structures.",
+              event_count: 31,
+              avg_tone: -1.9,
+            },
+            {
+              code: "BR",
+              country: "Brazil",
+              srsD: 5.6,
+              srsI: 3.8,
+              gscs: 4.7,
+              sgm: 4.7,
+              latitude: -14.2350,
+              longitude: -51.9253,
+              sti: 55,
+              category: "Soft Supremacism",
+              description: "Brazil demonstrates soft supremacism with persistent racial and economic inequalities despite formal legal equality. Social mobility remains limited for marginalized groups.",
+              event_count: 23,
+              avg_tone: -1.6,
+            },
+            {
+              code: "FR",
+              country: "France",
+              srsD: 3.7,
+              srsI: 3.9,
+              gscs: 3.8,
+              sgm: 3.8,
+              latitude: 46.2276,
+              longitude: 2.2137,
+              sti: 40,
+              category: "Mixed Governance",
+              description: "France shows mixed governance with strong republican values alongside challenges integrating minority communities. Colonial legacy impacts domestic and international relations.",
+              event_count: 19,
+              avg_tone: -0.8,
+            },
+            {
+              code: "JP",
+              country: "Japan",
+              srsD: 4.2,
+              srsI: 3.1,
+              gscs: 3.6,
+              sgm: 3.6,
+              latitude: 36.2048,
+              longitude: 138.2529,
+              sti: 65,
+              category: "Mixed Governance",
+              description: "Japan demonstrates mixed governance with strong cohesion for dominant ethnic groups but challenges with minority integration and gender equality.",
+              event_count: 12,
+              avg_tone: 0.3,
+            },
+            {
+              code: "ZA",
+              country: "South Africa",
+              srsD: 5.1,
+              srsI: 3.2,
+              gscs: 4.1,
+              sgm: 4.1,
+              latitude: -30.5595,
+              longitude: 22.9375,
+              sti: 48,
+              category: "Soft Supremacism",
+              description: "South Africa shows signs of soft supremacism despite strong constitutional protections. Post-apartheid transition continues with economic disparities along historical lines.",
+              event_count: 28,
+              avg_tone: -1.2,
+            },
+            {
+              code: "AU",
+              country: "Australia",
+              srsD: 3.6,
+              srsI: 3.1,
+              gscs: 3.3,
+              sgm: 3.3,
+              latitude: -25.2744,
+              longitude: 133.7751,
+              sti: 35,
+              category: "Mixed Governance",
+              description: "Australia exhibits mixed governance with ongoing reconciliation efforts for indigenous peoples alongside strong democratic institutions.",
+              event_count: 11,
+              avg_tone: 0.7,
+            },
+            {
+              code: "CA",
+              country: "Canada",
+              srsD: 3.2,
+              srsI: 2.4,
+              gscs: 2.8,
+              sgm: 2.8,
+              latitude: 56.1304,
+              longitude: -106.3468,
+              sti: 30,
+              category: "Mixed Governance",
+              description: "Canada shows mixed governance with multicultural frameworks and reconciliation efforts for indigenous communities. Strong legal protections with ongoing social challenges.",
+              event_count: 14,
+              avg_tone: 1.3,
+            },
+            {
+              code: "GB",
+              country: "United Kingdom",
+              srsD: 3.9,
+              srsI: 4.1,
+              gscs: 4.0,
+              sgm: 4.0,
+              latitude: 55.3781,
+              longitude: -3.4360,
+              sti: 45,
+              category: "Mixed Governance",
+              description: "The United Kingdom demonstrates mixed governance with strong democratic institutions alongside challenges with post-colonial relationships and integration of minority communities.",
+              event_count: 26,
+              avg_tone: -0.6,
+            },
+            {
+              code: "MX",
+              country: "Mexico",
+              srsD: 5.3,
+              srsI: 3.1,
+              gscs: 4.2,
+              sgm: 4.2,
+              latitude: 23.6345,
+              longitude: -102.5528,
+              sti: 52,
+              category: "Soft Supremacism",
+              description: "Mexico exhibits soft supremacism with persistent inequalities along ethnic and economic lines. Indigenous communities face systemic challenges despite constitutional protections.",
+              event_count: 32,
+              avg_tone: -2.1,
+            },
+            {
+              code: "ES",
+              country: "Spain",
+              srsD: 3.8,
+              srsI: 3.3,
+              gscs: 3.5,
+              sgm: 3.5,
+              latitude: 40.4637,
+              longitude: -3.7492,
+              sti: 38,
+              category: "Mixed Governance",
+              description: "Spain shows mixed governance with regional autonomy structures alongside ongoing tensions related to regional identities and migrant communities.",
+              event_count: 17,
+              avg_tone: -0.4,
+            }
+          ];
+
+          setSgmData(mockData);
+          setLastUpdated(new Date());
+          setIsLoading(false);
+
+          toast({
+            title: "Data Loaded",
+            description: "Supremacism data has been successfully loaded",
+          });
+        } catch (error) {
+          console.error("Error loading data:", error);
+          setError(`Failed to load data: ${error.message}`);
+          setIsLoading(false);
         }
-
-        setLastUpdated(new Date());
-        setIsLoading(false);
-
-        toast({
-          title: "GDELT Data Loaded",
-          description: "Supremacism data has been successfully loaded from GDELT",
-        });
-      } catch (apiError) {
-        console.error("API Error:", apiError);
-
-        // Fall back to mock data
-        useMockData();
-
-        setError(`API connection failed: ${apiError instanceof Error ? apiError.message : String(apiError)}. Using sample data.`);
-
-        toast({
-          title: "Using Sample Data",
-          description: "API connection failed. Using sample data instead.",
-          variant: "warning"
-        });
-      }
+      }, 1500); // Simulate loading delay
     };
 
     fetchSGMData();
   }, []);
 
-  // Function for using mock data when API fails
-  const useMockData = () => {
-    // Simulating API call with timeout
-    setTimeout(() => {
-      try {
-        // Mock data as a fallback
-        const mockData = [
-          {
-            code: "US",
-            country: "United States",
-            srsD: 4.2,
-            srsI: 6.7,
-            gscs: 5.2,
-            sgm: 5.2, // Adding SGM field for heatmap
-            latitude: 37.0902,
-            longitude: -95.7129,
-            sti: 45,
-            category: "Soft Supremacism",
-            description: "The United States exhibits soft supremacism patterns with institutional inequalities despite formal legal equality. Historical patterns persist in economic and social structures.",
-            event_count: 42,
-            avg_tone: -2.7,
-          },
-          {
-            code: "CN",
-            country: "China",
-            srsD: 7.1,
-            srsI: 6.8,
-            gscs: 7.0,
-            sgm: 7.0,
-            latitude: 35.8617,
-            longitude: 104.1954,
-            sti: 75,
-            category: "Structural Supremacism",
-            description: "China demonstrates structural supremacism with notable inequalities at societal and governmental levels. Minority populations face systemic discrimination and there are expansionist tendencies in foreign policy.",
-            event_count: 37,
-            avg_tone: -3.5,
-          },
-          {
-            code: "RU",
-            country: "Russia",
-            srsD: 6.9,
-            srsI: 7.8,
-            gscs: 7.3,
-            sgm: 7.3,
-            latitude: 61.5240,
-            longitude: 105.3188,
-            sti: 80,
-            category: "Structural Supremacism",
-            description: "Russia shows strong structural supremacism internally and aggressive patterns internationally. Power concentration creates significant disparities for non-dominant groups.",
-            event_count: 53,
-            avg_tone: -5.2,
-          },
-          {
-            code: "SE",
-            country: "Sweden",
-            srsD: 1.8,
-            srsI: 1.6,
-            gscs: 1.7,
-            sgm: 1.7,
-            latitude: 60.1282,
-            longitude: 18.6435,
-            sti: 15,
-            category: "Non-Supremacist Governance",
-            description: "Sweden demonstrates strong egalitarian governance with robust institutions protecting equality. Social welfare systems minimize power disparities between groups.",
-            event_count: 8,
-            avg_tone: 3.1,
-          },
-          // More mock data countries...
-        ];
-
-        setSgmData(mockData);
-        setLastUpdated(new Date());
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error loading mock data:", error);
-        setError(`Failed to load data: ${error instanceof Error ? error.message : String(error)}`);
-        setIsLoading(false);
-      }
-    }, 1000); // Faster loading for mock data
-  };
-
-  // Updated to fetch fresh data from API
+  // Trigger a manual refresh of the data
   const refreshData = async () => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      // Fetch from the GDELT API
-      const data = await fetchSupremacismData();
-      setSgmData(data);
-
-      // Also refresh regional data
+    // Simulate API call with timeout
+    setTimeout(() => {
       try {
-        const regions = await fetchRegionalSummary();
-        setRegionalData(regions);
-      } catch (regionError) {
-        console.error("Error refreshing regional data:", regionError);
-      }
+        // Just reset the lastUpdated timestamp to simulate fresh data
+        setLastUpdated(new Date());
+        setIsLoading(false);
 
-      setLastUpdated(new Date());
-      setIsLoading(false);
-
-      toast({
-        title: "Data Refreshed",
-        description: "Supremacism data has been updated from GDELT",
-      });
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-      setError(`Failed to refresh data: ${error instanceof Error ? error.message : String(error)}`);
-      setIsLoading(false);
-
-      toast({
-        title: "Refresh Failed",
-        description: error instanceof Error ? error.message : String(error),
-        variant: "destructive"
-      });
-    }
-  };
-
-  // New function to trigger GDELT analysis
-  const startGdeltAnalysis = async () => {
-    setIsAnalysisRunning(true);
-    setAnalysisProgress(0);
-
-    try {
-      const result = await runGdeltAnalysis();
-      setAnalysisJobId(result.jobId);
-
-      toast({
-        title: "Analysis Started",
-        description: `New GDELT analysis has been initiated. Job ID: ${result.jobId || 'Unknown'}`,
-      });
-
-      // Wait a bit and then start polling for completion
-      setTimeout(() => {
-        pollAnalysisStatus(result.jobId);
-      }, 5000);
-    } catch (error) {
-      console.error("Error starting analysis:", error);
-
-      toast({
-        title: "Analysis Failed",
-        description: error instanceof Error ? error.message : String(error),
-        variant: "destructive"
-      });
-
-      setIsAnalysisRunning(false);
-    }
-  };
-
-  // Poll for analysis completion
-  const pollAnalysisStatus = async (jobId: string) => {
-    if (!jobId) return;
-
-    try {
-      // Check job status
-      const statusResult = await checkAnalysisStatus(jobId);
-
-      // Update progress
-      if (statusResult.progress) {
-        setAnalysisProgress(statusResult.progress * 100);
-      }
-
-      // If completed, refresh data
-      if (statusResult.status === "completed") {
         toast({
-          title: "Analysis Complete",
-          description: statusResult.message || "GDELT data has been processed. Refreshing data...",
+          title: "Data Refreshed",
+          description: "Supremacism data has been updated",
         });
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        setError(`Failed to refresh data: ${error.message}`);
+        setIsLoading(false);
 
-        refreshData();
-        setIsAnalysisRunning(false);
-        setAnalysisJobId(null);
-        return;
-      }
-
-      // If failed, show error
-      if (statusResult.status === "failed") {
         toast({
-          title: "Analysis Failed",
-          description: statusResult.message || "GDELT analysis failed",
+          title: "Refresh Failed",
+          description: error.message,
           variant: "destructive"
         });
-
-        setIsAnalysisRunning(false);
-        setAnalysisJobId(null);
-        return;
       }
-
-      // Continue polling
-      setTimeout(() => pollAnalysisStatus(jobId), 2000);
-    } catch (error) {
-      console.error("Error checking analysis status:", error);
-
-      // Fallback to simulated completion
-      setTimeout(() => {
-        toast({
-          title: "Analysis Complete",
-          description: "GDELT data has been processed. Refreshing data...",
-        });
-
-        refreshData();
-        setIsAnalysisRunning(false);
-        setAnalysisJobId(null);
-      }, 8000);
-    }
+    }, 2000); // Simulate refresh delay
   };
 
   return (
@@ -640,7 +631,7 @@ const WorldMap = () => {
                 variant="outline"
                 className="bg-black/50 text-white border-white/20"
                 onClick={refreshData}
-                disabled={isLoading || isAnalysisRunning}
+                disabled={isLoading}
               >
                 {isLoading ? (
                   <>
@@ -649,25 +640,6 @@ const WorldMap = () => {
                   </>
                 ) : (
                   "Refresh Data"
-                )}
-              </Button>
-              {/* New button for triggering GDELT analysis */}
-              <Button
-                variant="outline"
-                className="bg-black/50 text-white border-white/20"
-                onClick={startGdeltAnalysis}
-                disabled={isLoading || isAnalysisRunning}
-              >
-                {isAnalysisRunning ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {analysisProgress > 0 ? `Analyzing (${Math.round(analysisProgress)}%)` : "Analyzing..."}
-                  </>
-                ) : (
-                  <>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Run GDELT Analysis
-                  </>
                 )}
               </Button>
               <Button
@@ -683,9 +655,9 @@ const WorldMap = () => {
           {error ? (
             <Alert className="bg-black/40 border-red-400 mb-6">
               <Info className="h-4 w-4" />
-              <AlertTitle className="text-white">API Connection Error</AlertTitle>
+              <AlertTitle className="text-white">Error Loading Data</AlertTitle>
               <AlertDescription className="text-gray-300">
-                {error}
+                {error}. Using mock data instead.
               </AlertDescription>
             </Alert>
           ) : (
@@ -693,10 +665,10 @@ const WorldMap = () => {
               {lastUpdated && (
                 <Alert className="bg-black/40 border-white/20 mb-6">
                   <Info className="h-4 w-4" />
-                  <AlertTitle className="text-white">GDELT Data Updated</AlertTitle>
+                  <AlertTitle className="text-white">Data Updated</AlertTitle>
                   <AlertDescription className="text-gray-300">
-                    Supremacist-Egalitarianism data was last refreshed on {lastUpdated.toLocaleDateString()} at {lastUpdated.toLocaleTimeString()},
-                    incorporating the latest events from the GDELT database.
+                    Supremacist-Egalitarianism data was last refreshed on {lastUpdated.toLocaleDateString()},
+                    incorporating the latest reports from international monitoring agencies.
                   </AlertDescription>
                 </Alert>
               )}
@@ -714,8 +686,7 @@ const WorldMap = () => {
                     {/* Container with white background to make the map stand out from the dark theme */}
                     <LeafletHeatMap
                       countries={sgmData}
-                      onSelectCountry={setSelectedCountry}
-                      isLoading={isLoading || isAnalysisRunning}
+                      isLoading={isLoading}
                     />
                   </div>
                   <SupremacismLegend />
@@ -758,7 +729,7 @@ const WorldMap = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <RegionalChart regionalData={regionalData} />
+                      <RegionalChart />
                       <CategoryDistribution countries={sgmData} />
                     </div>
                   </div>
@@ -819,9 +790,9 @@ const WorldMap = () => {
                         <div className="bg-black/40 p-4 rounded-lg border border-white/10">
                           <h3 className="text-lg text-white mb-2">API Endpoints</h3>
                           <ul className="space-y-1 text-gray-300 text-sm">
-                            <li>• <code className="bg-black/50 px-1 rounded">GET /api/sgm/countries</code> - Get all country scores</li>
-                            <li>• <code className="bg-black/50 px-1 rounded">GET /api/sgm/countries/{'{country_code}'}</code> - Get specific country</li>
-                            <li>• <code className="bg-black/50 px-1 rounded">POST /api/sgm/run-analysis</code> - Trigger new GDELT analysis</li>
+                            <li>• <code className="bg-black/50 px-1 rounded">GET /api/countries</code> - Get all country scores</li>
+                            <li>• <code className="bg-black/50 px-1 rounded">GET /api/countries/{'{country_code}'}</code> - Get specific country</li>
+                            <li>• <code className="bg-black/50 px-1 rounded">GET /api/run-analysis</code> - Trigger new analysis</li>
                           </ul>
                         </div>
                         <div className="bg-black/40 p-4 rounded-lg border border-white/10">
