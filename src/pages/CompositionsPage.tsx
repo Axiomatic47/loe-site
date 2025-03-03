@@ -73,7 +73,7 @@ const CompositionsPage: React.FC = () => {
     };
 
     loadData();
-  }, [compositionId, store.refreshCompositions, navigate]);
+  }, [compositionId, navigate, store]);
 
   // Get compositions based on the ID
   const getCompositions = () => {

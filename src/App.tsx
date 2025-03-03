@@ -32,18 +32,31 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Home page */}
           <Route path="/" element={<Index />} />
+
+          {/* Collection listing pages */}
           <Route path="/composition/:compositionId" element={<CompositionsPage />} />
+
+          {/* Section page with proper route parameters */}
           <Route
             path="/composition/:compositionId/composition/:compositionIndex/section/:sectionId"
             element={<SectionPage />}
           />
+
+          {/* Additional pages */}
           <Route path="/worldmap" element={<WorldMap />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/donate" element={<Donate />} />
           <Route path="/admin/*" element={<AdminPage />} />
+
+          {/* Debug route */}
+          <Route path="/debug" element={<DebugPage />} />
         </Routes>
+
+        {/* Admin Link for development */}
+        <AdminLink />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
