@@ -71,7 +71,7 @@ const SectionPage = () => {
     }
 
     setTimeout(() => {
-      navigate(`/composition/${compositionId}/composition/${compositionIndex}/section/${newSectionId}`);
+      navigate(`/composition/${compositionId}/${compositionIndex}/${newSectionId}`);
     }, 100);
   };
 

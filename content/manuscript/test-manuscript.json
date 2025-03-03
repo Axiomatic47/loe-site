@@ -1,0 +1,13 @@
+{
+  "title": "Test Manuscript",
+  "collection_type": "manuscript",
+  "sections": [
+    {
+      "title": "Test Section",
+      "featured": true,
+      "content_level_1": "Basic content",
+      "content_level_3": "# Intermediate Content\n\nThis is a test section.",
+      "content_level_5": "# Advanced Content\n\nThis is detailed test content."
+    }
+  ]
+}

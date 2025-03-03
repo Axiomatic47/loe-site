@@ -23,7 +23,7 @@ const apiServer = spawn('node', ['src/api/server.js'], {
 });
 
 // Start the Netlify CMS proxy server
-const netlifyProxyServer = spawn('npx', ['@staticcms/proxy-server'], {
+const netlifyProxyServer = spawn('npx', ['@staticcms/proxy-server', '-p', '8081'], {
   cwd: rootDir,
   stdio: 'inherit',
   shell: true

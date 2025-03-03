@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Content Manager</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/netlify-cms@^2.10.192/dist/netlify-cms.js"></script>
+    <script>
+      // Configure CMS
+      const config = {
+        backend: {
+          name: "test-repo"
+        },
+        local_backend: true,
+        publish_mode: "simple",
+        media_folder: "public/uploads",
+        public_folder: "/uploads",
+        collections: [
+          {
+            name: "manuscript",
+            label: "Manuscript & White Papers",
+            folder: "content/manuscript",
+            create: true,
+            format: "json",
+            identifier_field: "title",
+            fields: [
+              {
+                label: "Title",
+                name: "title",
+                widget: "string",
+                required: true
+              },
+              {
+                label: "Collection Type",
+                name: "collection_type",
+                widget: "hidden",
+                default: "manuscript"
+              },
+              {
+                label: "Sections",
+                name: "sections",
+                widget: "list",
+                allow_add: true,
+                fields: [
+                  {
+                    label: "Title",
+                    name: "title",
+                    widget: "string",
+                    required: true
+                  },
+                  {
+                    label: "Featured",
+                    name: "featured",
+                    widget: "boolean",
+                    default: false
+                  },
+                  {
+                    label: "Basic Content (Level 1)",
+                    name: "content_level_1",
+                    widget: "markdown",
+                    required: false
+                  },
+                  {
+                    label: "Intermediate Content (Level 3)",
+                    name: "content_level_3",
+                    widget: "markdown",
+                    required: true
+                  },
+                  {
+                    label: "Advanced Content (Level 5)",
+                    name: "content_level_5",
+                    widget: "markdown",
+                    required: false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            name: "data",
+            label: "Data & Evidence",
+            folder: "content/data",
+            create: true,
+            format: "json",
+            identifier_field: "title",
+            fields: [
+              {
+                label: "Title",
+                name: "title",
+                widget: "string",
+                required: true
+              },
+              {
+                label: "Collection Type",
+                name: "collection_type",
+                widget: "hidden",
+                default: "data"
+              },
+              {
+                label: "Sections",
+                name: "sections",
+                widget: "list",
+                allow_add: true,
+                fields: [
+                  {
+                    label: "Title",
+                    name: "title",
+                    widget: "string",
+                    required: true
+                  },
+                  {
+                    label: "Featured",
+                    name: "featured",
+                    widget: "boolean",
+                    default: false
+                  },
+                  {
+                    label: "Basic Content (Level 1)",
+                    name: "content_level_1",
+                    widget: "markdown",
+                    required: false
+                  },
+                  {
+                    label: "Intermediate Content (Level 3)",
+                    name: "content_level_3",
+                    widget: "markdown",
+                    required: true
+                  },
+                  {
+                    label: "Advanced Content (Level 5)",
+                    name: "content_level_5",
+                    widget: "markdown",
+                    required: false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      // Initialize the CMS with added error handling
+      try {
+        console.log('Initializing CMS with config:', config);
+        CMS.init({ config });
+
+        // Register listeners
+        CMS.registerEventListener({
+          name: 'preSave',
+          handler: ({ entry }) => {
+            console.log('CMS preSave event - entry about to be saved:', entry.toJS());
+            return entry;
+          },
+        });
+
+        CMS.registerEventListener({
+          name: 'postSave',
+          handler: ({ entry }) => {
+            console.log('CMS postSave event - entry saved:', entry.toJS());
+            alert('Content saved successfully!');
+          },
+        });
+
+        CMS.registerEventListener({
+          name: 'onFailure',
+          handler: ({ error }) => {
+            console.error('CMS save failure:', error);
+            alert('Failed to save content: ' + error.message);
+          },
+        });
+
+        console.log('CMS initialized successfully');
+      } catch (error) {
+        console.error('Error initializing CMS:', error);
+      }
+    </script>
+  </body>
+</html>

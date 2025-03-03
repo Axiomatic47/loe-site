@@ -3,16 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-"scripts": {
+  "scripts": {
     "dev": "vite",
     "start": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "clean": "rimraf dist content/manuscript/* content/data/* public/uploads/*",
     "reset": "npm run clean && mkdir -p content/manuscript content/data public/uploads && chmod 777 content/manuscript content/data public/uploads",
-    "dev:all": "node scripts/dev-server.js",
-    "api": "node src/api/server.js",
-    "cms-proxy": "npx @staticcms/proxy-server"
+    "cms": "npx netlify-cms-proxy-server",
+    "debug:content": "node scripts/content-debug.js",
+    "create:test": "node scripts/content-debug.js --create-test",
+    "dev:all": "concurrently \"npm run dev\" \"npm run cms\""
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.1.2",
@@ -53,7 +54,6 @@
     "framer-motion": "^11.0.3",
     "http-proxy-middleware": "^3.0.3",
     "lucide-react": "^0.320.0",
-    "netlify-cms-proxy-server": "^1.3.24",
     "next-themes": "^0.2.1",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.0",
@@ -81,6 +81,7 @@
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "netlify-cms-proxy-server": "^1.3.24",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.2.2",

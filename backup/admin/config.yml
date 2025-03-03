@@ -1,0 +1,13 @@
+backend:
+  name: test-repo
+media_folder: public/uploads
+public_folder: /uploads
+collections:
+  - name: manuscript
+    label: Manuscript & White Papers
+    folder: content/manuscript
+    create: true
+    format: json
+    identifier_field: title
+    fields:
+      - {label: Title, name: title, widget: string}

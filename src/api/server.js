@@ -12,8 +12,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Enable CORS for all routes
-app.use(cors());
+// Enable CORS for all routes with specific origins
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:8081'],
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // Root directory (assuming this file is in src/api)
@@ -43,6 +49,18 @@ import debugRouter from './debug.js';
 
 // Use debug router
 app.use('/api', debugRouter);
+
+// Basic status endpoint
+app.get('/api/status', (req, res) => {
+  res.json({
+    status: 'ok',
+    time: new Date().toISOString(),
+    contentDirs: {
+      manuscript: fs.existsSync(path.join(contentDir, 'manuscript')),
+      data: fs.existsSync(path.join(contentDir, 'data'))
+    }
+  });
+});
 
 // API endpoints to get collections
 app.get('/api/collections/:collectionType', (req, res) => {
@@ -94,6 +112,8 @@ if (process.env.NODE_ENV === 'development') {
 // Start the server
 app.listen(PORT, () => {
   console.log(`API server running on port ${PORT}`);
+  console.log(`API endpoints available at http://localhost:${PORT}/api/collections/manuscript`);
+  console.log(`API status check: http://localhost:${PORT}/api/status`);
 });
 
 export default app;
