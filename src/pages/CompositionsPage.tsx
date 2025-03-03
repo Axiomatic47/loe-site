@@ -1,4 +1,4 @@
-// src/pages/CompositionsPage.tsx
+// src/pages/CompositionsPage.tsx - Fixed loading logic
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/PageLayout";
@@ -54,6 +54,7 @@ const CompositionsPage: React.FC = () => {
   const navigate = useNavigate();
   const store = useCompositionStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingAttempted, setLoadingAttempted] = useState(false);
 
   useEffect(() => {
     if (compositionId === "memorandum") {
@@ -62,9 +63,18 @@ const CompositionsPage: React.FC = () => {
     }
 
     const loadData = async () => {
+      // Don't attempt loading again if we already tried
+      if (loadingAttempted) return;
+
       try {
         setIsLoading(true);
-        await store.refreshCompositions();
+
+        // Only load if not already initialized or compositions are empty
+        if (!store.initialized || store.manuscript.length === 0) {
+          await store.refreshCompositions();
+        }
+
+        setLoadingAttempted(true);
       } catch (error) {
         console.error('Error loading compositions:', error);
       } finally {
@@ -73,7 +83,7 @@ const CompositionsPage: React.FC = () => {
     };
 
     loadData();
-  }, [compositionId, navigate, store]);
+  }, [compositionId, navigate, store, loadingAttempted]);
 
   // Get compositions based on the ID
   const getCompositions = () => {
@@ -92,6 +102,35 @@ const CompositionsPage: React.FC = () => {
   const compositions = getCompositions();
   const collectionTitle = getCollectionTitle(compositionId);
 
+  // Safari detection for navigation
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  // Handle clicking on a composition
+  const handleCompositionClick = (index: number) => {
+    // For Safari, use direct navigation to prevent freezing
+    if (isSafari) {
+      document.documentElement.classList.add('navigating');
+      setTimeout(() => {
+        window.location.href = `/composition/${compositionId}/composition/${index + 1}/section/1`;
+      }, 50);
+    } else {
+      navigate(`/composition/${compositionId}/composition/${index + 1}/section/1`);
+    }
+  };
+
+  // Handle back button click
+  const handleBackClick = () => {
+    // For Safari, use direct navigation to prevent freezing
+    if (isSafari) {
+      document.documentElement.classList.add('navigating');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 50);
+    } else {
+      navigate('/');
+    }
+  };
+
   if (isLoading) {
     return (
       <PageLayout>
@@ -108,11 +147,12 @@ const CompositionsPage: React.FC = () => {
 
   return (
     <PageLayout>
+      <div className="navigation-indicator"></div>
       <main className="container mx-auto px-4 py-12">
         <BlurPanel className="p-8 sm:p-12 mb-16">
           <Button
             variant="ghost"
-            onClick={() => navigate("/")}
+            onClick={handleBackClick}
             className="mb-8 text-white hover:bg-white/10"
           >
             ← Back to Home
@@ -136,7 +176,7 @@ const CompositionsPage: React.FC = () => {
                   key={index}
                   className="backdrop-blur-md bg-black/80 rounded-lg p-8 border border-white/10
                            cursor-pointer transition-all hover:bg-black/90 hover:scale-[1.01]"
-                  onClick={() => navigate(`/composition/${compositionId}/composition/${index + 1}/section/1`)}
+                  onClick={() => handleCompositionClick(index)}
                 >
                   <h2 className="text-3xl font-serif mb-6 text-white drop-shadow-lg">{composition.title}</h2>
                   <div className="prose prose-invert prose-lg max-w-none">

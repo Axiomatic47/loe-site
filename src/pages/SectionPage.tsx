@@ -1,4 +1,4 @@
-// src/pages/SectionPage.tsx
+// src/pages/SectionPage.tsx - Fixed loading logic
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
@@ -12,18 +12,34 @@ import { cn } from "@/lib/utils";
 import MobileNavigation, { useMobileNavigation } from "@/components/MobileNavigation";
 
 const SectionPage = () => {
-  // Fixed URL parameter handling with proper defaults
   const { compositionId = "", compositionIndex = "1", sectionId = "1" } = useParams();
   const [literacyLevel, setLiteracyLevel] = useState(3);
   const { toast } = useToast();
   const navigate = useNavigate();
   const store = useCompositionStore();
   const { isSidebarOpen, setIsSidebarOpen, isMobile } = useMobileNavigation();
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Single useEffect for loading data - only refresh compositions once
   useEffect(() => {
-    store.refreshCompositions();
-  }, [store]);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Only load compositions if not already initialized
+        if (!store.initialized || store.manuscript.length === 0) {
+          await store.refreshCompositions();
+        }
+      } catch (error) {
+        console.error('Error loading compositions:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    loadData();
+  }, [store.initialized, store.manuscript.length, store.refreshCompositions]);
+
+  // Scroll to top when section changes
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -84,10 +100,25 @@ const SectionPage = () => {
         setIsSidebarOpen(false);
       }
 
-      setTimeout(() => {
-        // Fixed navigation path format
-        navigate(`/composition/${compositionId}/composition/${compositionIndex}/section/${newSectionId}`);
-      }, 100);
+      // Determine if we need to use a different navigation approach for Safari
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+      if (isSafari) {
+        // For Safari, use direct window.location to prevent freezing
+        setTimeout(() => {
+          // Add the navigating class to disable complex animations
+          document.documentElement.classList.add('navigating');
+
+          setTimeout(() => {
+            window.location.href = `/composition/${compositionId}/composition/${compositionIndex}/section/${newSectionId}`;
+          }, 10);
+        }, 100);
+      } else {
+        // For other browsers, use React Router
+        setTimeout(() => {
+          navigate(`/composition/${compositionId}/composition/${compositionIndex}/section/${newSectionId}`);
+        }, 100);
+      }
     }
   };
 
@@ -130,6 +161,20 @@ const SectionPage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <PageLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="backdrop-blur-md bg-black/40 rounded-lg p-8 border border-white/10">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-2xl mb-4 text-white drop-shadow-lg">Loading...</h1>
+            </div>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
+
   if (!currentSection || !currentComposition) {
     return (
       <PageLayout>
@@ -138,7 +183,14 @@ const SectionPage = () => {
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-2xl mb-4 text-white drop-shadow-lg">Section Not Found</h1>
               <button
-                onClick={() => navigate(`/composition/${compositionId}`)}
+                onClick={() => {
+                  // For Safari use direct window location
+                  if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+                    window.location.href = `/composition/${compositionId}`;
+                  } else {
+                    navigate(`/composition/${compositionId}`);
+                  }
+                }}
                 className="text-blue-400 hover:text-blue-300"
               >
                 Return to Composition List
@@ -152,6 +204,7 @@ const SectionPage = () => {
 
   return (
     <PageLayout>
+      <div className="navigation-indicator"></div>
       <div className="flex">
         <MobileNavigation
           isSidebarOpen={isSidebarOpen}
