@@ -89,11 +89,17 @@ const LeafletWorldMap = ({ countries = [], onSelectCountry, isLoading = false })
   const markersRef = useRef([]);
   const [mapInitialized, setMapInitialized] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [styleAdded, setStyleAdded] = useState(false);
+  const leafletLoadedRef = useRef(false);
 
-  // Load Leaflet scripts and CSS
+  // Load Leaflet scripts and CSS just once
   useEffect(() => {
-    // Only load scripts once
-    if (document.getElementById('leaflet-css') || scriptLoaded) return;
+    // Skip if already loaded
+    if (document.getElementById('leaflet-css') || leafletLoadedRef.current) {
+      return;
+    }
+
+    leafletLoadedRef.current = true;
 
     // Create and load Leaflet CSS
     const linkEl = document.createElement('link');
@@ -111,18 +117,28 @@ const LeafletWorldMap = ({ countries = [], onSelectCountry, isLoading = false })
     };
     document.head.appendChild(scriptEl);
 
+    // Clean up on unmount - this should only happen once
     return () => {
-      // Clean up scripts if component unmounts
       const css = document.getElementById('leaflet-css');
       const js = document.getElementById('leaflet-js');
       if (css) css.remove();
       if (js) js.remove();
-    };
-  }, []);
+      leafletLoadedRef.current = false;
 
-  // Initialize the map when scripts are loaded
+      // Also clean up map instance if it exists
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, []); // Empty dependency array - run once only
+
+  // Initialize the map when scripts are loaded and the div is mounted
   useEffect(() => {
-    if (!scriptLoaded || !mapRef.current || mapInitialized) return;
+    // Skip if any condition is not met
+    if (!scriptLoaded || !mapRef.current || mapInitialized) {
+      return;
+    }
 
     try {
       // Get the Leaflet library from window
@@ -183,20 +199,40 @@ const LeafletWorldMap = ({ countries = [], onSelectCountry, isLoading = false })
 
       zoomControl.addTo(map);
 
+      // Finally set initialization flag
       setMapInitialized(true);
     } catch (error) {
       console.error("Error initializing map:", error);
     }
+  }, [scriptLoaded]); // Only depend on scriptLoaded
 
-    // Cleanup on component unmount
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-      setMapInitialized(false);
-    };
-  }, [scriptLoaded, mapInitialized]);
+  // Add custom popup styles once
+  useEffect(() => {
+    if (!mapInitialized || styleAdded) return;
+
+    try {
+      // Add custom popup styles
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .custom-popup .leaflet-popup-content-wrapper {
+          background-color: rgba(0, 0, 0, 0.8);
+          color: white;
+          border-radius: 6px;
+          padding: 0;
+        }
+        .custom-popup .leaflet-popup-tip {
+          background-color: rgba(0, 0, 0, 0.8);
+        }
+        .custom-popup .leaflet-popup-content {
+          margin: 12px;
+        }
+      `;
+      document.head.appendChild(style);
+      setStyleAdded(true);
+    } catch (error) {
+      console.error("Error adding styles:", error);
+    }
+  }, [mapInitialized, styleAdded]);
 
   // Add or update country markers when countries data changes
   useEffect(() => {
@@ -215,6 +251,7 @@ const LeafletWorldMap = ({ countries = [], onSelectCountry, isLoading = false })
       markersRef.current = [];
 
       // Add markers for countries with data
+      const newMarkers = [];
       countries.forEach(country => {
         const code = country.code;
         const coords = countryCoordinates[code];
@@ -255,31 +292,16 @@ const LeafletWorldMap = ({ countries = [], onSelectCountry, isLoading = false })
         });
 
         // Store marker reference for cleanup
-        markersRef.current.push(marker);
+        newMarkers.push(marker);
       });
 
-      // Add custom popup styles
-      const style = document.createElement('style');
-      style.innerHTML = `
-        .custom-popup .leaflet-popup-content-wrapper {
-          background-color: rgba(0, 0, 0, 0.8);
-          color: white;
-          border-radius: 6px;
-          padding: 0;
-        }
-        .custom-popup .leaflet-popup-tip {
-          background-color: rgba(0, 0, 0, 0.8);
-        }
-        .custom-popup .leaflet-popup-content {
-          margin: 12px;
-        }
-      `;
-      document.head.appendChild(style);
+      // Update markers ref with new array
+      markersRef.current = newMarkers;
 
     } catch (error) {
       console.error("Error adding markers:", error);
     }
-  }, [countries, mapInitialized, onSelectCountry]);
+  }, [countries, mapInitialized]);
 
   // Handle zoom reset (fit all markers in view)
   const handleResetView = () => {
@@ -310,6 +332,7 @@ const LeafletWorldMap = ({ countries = [], onSelectCountry, isLoading = false })
             size="sm"
             className="bg-black/50 text-white border-white/20"
             onClick={handleResetView}
+            disabled={!mapInitialized}
           >
             Reset View
           </Button>
@@ -372,6 +395,7 @@ const LeafletWorldMap = ({ countries = [], onSelectCountry, isLoading = false })
                 }
               }
             }}
+            disabled={!mapInitialized}
           >
             Fullscreen
           </Button>
