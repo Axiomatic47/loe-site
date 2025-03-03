@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
@@ -436,11 +436,22 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     };
   }, []);
 
-  // Fullscreen change handler
+  // Fullscreen change handler with better error handling
   useEffect(() => {
+    if (!scriptLoaded) return;
+
     const handleFullscreenChange = () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
+      console.log("Fullscreen state changed");
+      try {
+        if (mapInstanceRef.current) {
+          // Need to wait a moment for the browser to adjust the size
+          setTimeout(() => {
+            mapInstanceRef.current.invalidateSize();
+            console.log("Map size invalidated after fullscreen change");
+          }, 200);
+        }
+      } catch (error) {
+        console.error("Error handling fullscreen change:", error);
       }
     };
 
@@ -455,25 +466,31 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
-  }, []);
+  }, [scriptLoaded]);
 
-  // Handle reset view with smoother animation - modified to show entire world
-  const handleResetView = () => {
-    if (!mapInstanceRef.current) return;
+  // Define handleResetView as a useCallback to avoid recreation on each render
+  const handleResetView = useCallback(() => {
+    console.log("handleResetView called", mapInstanceRef.current);
+    if (!mapInstanceRef.current || !window.L) return;
 
-    // Use world bounds that will show the entire world
-    const worldBounds = L.latLngBounds(
-      L.latLng(-60, -170), // Southwest corner - excluding Antarctica for better fit
-      L.latLng(75, 170)    // Northeast corner - excluding northernmost areas
-    );
+    try {
+      // Use world bounds that will show the entire world
+      const L = window.L;
+      const worldBounds = L.latLngBounds(
+        L.latLng(-60, -170), // Southwest corner - excluding Antarctica for better fit
+        L.latLng(75, 170)    // Northeast corner - excluding northernmost areas
+      );
 
-    mapInstanceRef.current.fitBounds(worldBounds, {
-      animate: true,
-      duration: 0.75,
-      easeLinearity: 0.25,
-      padding: [10, 10] // Add a bit of padding
-    });
-  };
+      mapInstanceRef.current.fitBounds(worldBounds, {
+        animate: true,
+        duration: 0.75,
+        easeLinearity: 0.25,
+        padding: [10, 10] // Add a bit of padding
+      });
+    } catch (error) {
+      console.error("Error in handleResetView:", error);
+    }
+  }, [mapInstanceRef]);
 
   return (
     <div className="bg-black/30 p-4 rounded-lg border border-white/10 mt-4">
@@ -484,39 +501,69 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
           <Button
             variant="outline"
             size="sm"
-            className="bg-black/50 text-white border-white/20"
-            onClick={handleResetView}
-            disabled={isLoading || !mapInstanceRef.current}
+            className="bg-black/50 text-white border-white/20 hover:bg-black/70"
+            onClick={() => {
+              console.log("Reset view clicked", mapInstanceRef.current);
+              if (!mapInstanceRef.current) return;
+
+              try {
+                // Use world bounds that will show the entire world
+                const L = window.L;
+                if (!L) return;
+
+                const worldBounds = L.latLngBounds(
+                  L.latLng(-60, -170), // Southwest corner - excluding Antarctica for better fit
+                  L.latLng(75, 170)    // Northeast corner - excluding northernmost areas
+                );
+
+                mapInstanceRef.current.fitBounds(worldBounds, {
+                  animate: true,
+                  duration: 0.75,
+                  easeLinearity: 0.25,
+                  padding: [10, 10] // Add a bit of padding
+                });
+              } catch (error) {
+                console.error("Error resetting view:", error);
+              }
+            }}
+            disabled={!scriptLoaded}
           >
             Reset View
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="bg-black/50 text-white border-white/20"
+            className="bg-black/50 text-white border-white/20 hover:bg-black/70"
             onClick={() => {
-              const mapContainer = mapRef.current;
-              if (!mapContainer) return;
+              console.log("Fullscreen clicked", mapRef.current);
+              try {
+                const mapContainer = mapRef.current;
+                if (!mapContainer) return;
 
-              if (!document.fullscreenElement) {
-                if (mapContainer.requestFullscreen) {
-                  mapContainer.requestFullscreen();
-                } else if (mapContainer.webkitRequestFullscreen) {
-                  mapContainer.webkitRequestFullscreen();
-                } else if (mapContainer.msRequestFullscreen) {
-                  mapContainer.msRequestFullscreen();
+                if (!document.fullscreenElement) {
+                  console.log("Entering fullscreen mode");
+                  if (mapContainer.requestFullscreen) {
+                    mapContainer.requestFullscreen().catch(err => console.error("Fullscreen error:", err));
+                  } else if (mapContainer.webkitRequestFullscreen) {
+                    mapContainer.webkitRequestFullscreen();
+                  } else if (mapContainer.msRequestFullscreen) {
+                    mapContainer.msRequestFullscreen();
+                  }
+                } else {
+                  console.log("Exiting fullscreen mode");
+                  if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(err => console.error("Exit fullscreen error:", err));
+                  } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                  } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                  }
                 }
-              } else {
-                if (document.exitFullscreen) {
-                  document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                  document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                  document.msExitFullscreen();
-                }
+              } catch (error) {
+                console.error("Fullscreen toggle error:", error);
               }
             }}
-            disabled={isLoading || !mapInstanceRef.current}
+            disabled={!scriptLoaded}
           >
             Fullscreen
           </Button>
@@ -528,6 +575,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         <div
           ref={mapRef}
           className="h-full w-full bg-white relative"
+          id="map-container" // Added ID for easier selection
         />
 
         {(isLoading || !scriptLoaded) && (
