@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/components/ui/use-toast";
 import { Info, Download, FileText, Loader2 } from "lucide-react";
-import LeafletWorldMap from "@/components/LeafletWorldMap";
+import LeafletHeatMap from "@/components/LeafletHeatMap";
 
 const BlurPanel = ({
   children,
@@ -28,32 +28,24 @@ const BlurPanel = ({
   );
 };
 
+// Updated legend to match the new heatmap visualization
 const SupremacismLegend = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
     <div className="bg-black/30 p-4 rounded-lg border border-white/10">
-      <h3 className="text-lg font-medium mb-2 text-white">Supremacism Spectrum</h3>
-      <div className="space-y-2">
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-blue-500 mr-2 rounded"></div>
-          <span className="text-gray-300">Non-Supremacist (0-2)</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-green-500 mr-2 rounded"></div>
-          <span className="text-gray-300">Mixed Governance (2.1-4)</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-yellow-500 mr-2 rounded"></div>
-          <span className="text-gray-300">Soft Supremacism (4.1-6)</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-orange-500 mr-2 rounded"></div>
-          <span className="text-gray-300">Structural Supremacism (6.1-8)</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-red-500 mr-2 rounded"></div>
-          <span className="text-gray-300">Extreme Supremacism (8.1-10)</span>
+      <h3 className="text-lg font-medium mb-2 text-white">Supremacism-Egalitarianism Spectrum</h3>
+      <div className="mb-4">
+        <div className="h-6 w-full rounded-md"
+             style={{background: 'linear-gradient(to right, #0000ff, #2a7fff, #ffffff, #ffaa00, #ff5500, #ff0000)'}}></div>
+        <div className="flex justify-between mt-1 text-xs text-gray-300">
+          <span>0 (Strong Egalitarianism)</span>
+          <span>5 (Neutral)</span>
+          <span>10 (Strong Supremacism)</span>
         </div>
       </div>
+      <p className="text-sm text-gray-300 mt-2">
+        This visualization demonstrates how supremacist and egalitarian forces behave analogously to
+        thermodynamic principles, with surges and flows between regions.
+      </p>
     </div>
 
     <div className="bg-black/30 p-4 rounded-lg border border-white/10">
@@ -140,8 +132,8 @@ const CountryList = ({ countries, onSelect, selectedCountry }) => {
           >
             <div className="flex justify-between">
               <span className="text-white">{country.name || country.country}</span>
-              <span className={`${getColorClass(country.gscs)} px-2 rounded text-sm text-white`}>
-                {country.gscs.toFixed(1)}
+              <span className={`${getColorClass(country.gscs || country.sgm)} px-2 rounded text-sm text-white`}>
+                {(country.gscs || country.sgm).toFixed(1)}
               </span>
             </div>
             <div className="text-sm text-gray-400">{country.category}</div>
@@ -165,34 +157,36 @@ const CountryDetail = ({ country }) => {
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-black/30 p-3 rounded">
               <div className="text-sm text-gray-400">Domestic (SRS-D)</div>
-              <div className={`text-xl font-medium ${getTextColor(country.srsD)}`}>{country.srsD.toFixed(1)}</div>
+              <div className={`text-xl font-medium ${getTextColor(country.srsD)}`}>{country.srsD?.toFixed(1) || "N/A"}</div>
             </div>
             <div className="bg-black/30 p-3 rounded">
               <div className="text-sm text-gray-400">International (SRS-I)</div>
-              <div className={`text-xl font-medium ${getTextColor(country.srsI)}`}>{country.srsI.toFixed(1)}</div>
+              <div className={`text-xl font-medium ${getTextColor(country.srsI)}`}>{country.srsI?.toFixed(1) || "N/A"}</div>
             </div>
             <div className="bg-black/30 p-3 rounded">
-              <div className="text-sm text-gray-400">GSCS</div>
-              <div className={`text-xl font-medium ${getTextColor(country.gscs)}`}>{country.gscs.toFixed(1)}</div>
+              <div className="text-sm text-gray-400">GSCS/SGM</div>
+              <div className={`text-xl font-medium ${getTextColor(country.gscs || country.sgm)}`}>{(country.gscs || country.sgm).toFixed(1)}</div>
             </div>
           </div>
         </div>
 
-        <div>
-          <h4 className="text-lg text-white mb-2">Stability & Transition</h4>
-          <div className="bg-black/30 p-3 rounded">
-            <div className="flex justify-between mb-1">
-              <span className="text-sm text-gray-400">STI Score: {country.sti}</span>
-              <span className="text-sm text-gray-400">{getSTILabel(country.sti)}</span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div
-                className={`${getSTIColorClass(country.sti)} h-2 rounded-full`}
-                style={{ width: `${country.sti}%` }}
-              ></div>
+        {country.sti && (
+          <div>
+            <h4 className="text-lg text-white mb-2">Stability & Transition</h4>
+            <div className="bg-black/30 p-3 rounded">
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-gray-400">STI Score: {country.sti}</span>
+                <span className="text-sm text-gray-400">{getSTILabel(country.sti)}</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div
+                  className={`${getSTIColorClass(country.sti)} h-2 rounded-full`}
+                  style={{ width: `${country.sti}%` }}
+                ></div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {country.event_count && (
           <div>
@@ -348,6 +342,9 @@ const WorldMap = () => {
               srsD: 4.2,
               srsI: 6.7,
               gscs: 5.2,
+              sgm: 5.2, // Adding SGM field for heatmap
+              latitude: 37.0902,
+              longitude: -95.7129,
               sti: 45,
               category: "Soft Supremacism",
               description: "The United States exhibits soft supremacism patterns with institutional inequalities despite formal legal equality. Historical patterns persist in economic and social structures.",
@@ -360,6 +357,9 @@ const WorldMap = () => {
               srsD: 7.1,
               srsI: 6.8,
               gscs: 7.0,
+              sgm: 7.0,
+              latitude: 35.8617,
+              longitude: 104.1954,
               sti: 75,
               category: "Structural Supremacism",
               description: "China demonstrates structural supremacism with notable inequalities at societal and governmental levels. Minority populations face systemic discrimination and there are expansionist tendencies in foreign policy.",
@@ -372,6 +372,9 @@ const WorldMap = () => {
               srsD: 6.9,
               srsI: 7.8,
               gscs: 7.3,
+              sgm: 7.3,
+              latitude: 61.5240,
+              longitude: 105.3188,
               sti: 80,
               category: "Structural Supremacism",
               description: "Russia shows strong structural supremacism internally and aggressive patterns internationally. Power concentration creates significant disparities for non-dominant groups.",
@@ -384,6 +387,9 @@ const WorldMap = () => {
               srsD: 1.8,
               srsI: 1.6,
               gscs: 1.7,
+              sgm: 1.7,
+              latitude: 60.1282,
+              longitude: 18.6435,
               sti: 15,
               category: "Non-Supremacist Governance",
               description: "Sweden demonstrates strong egalitarian governance with robust institutions protecting equality. Social welfare systems minimize power disparities between groups.",
@@ -396,6 +402,9 @@ const WorldMap = () => {
               srsD: 2.9,
               srsI: 2.1,
               gscs: 2.5,
+              sgm: 2.5,
+              latitude: 51.1657,
+              longitude: 10.4515,
               sti: 25,
               category: "Mixed Governance",
               description: "Germany shows mixed governance with strong democratic institutions and acknowledgment of historical supremacist patterns. Legal frameworks promote equality though challenges persist.",
@@ -408,6 +417,9 @@ const WorldMap = () => {
               srsD: 5.8,
               srsI: 4.2,
               gscs: 5.0,
+              sgm: 5.0,
+              latitude: 20.5937,
+              longitude: 78.9629,
               sti: 60,
               category: "Soft Supremacism",
               description: "India exhibits soft supremacism with increasing tensions between religious and caste groups. Constitutional protections coexist with supremacist social structures.",
@@ -420,6 +432,9 @@ const WorldMap = () => {
               srsD: 5.6,
               srsI: 3.8,
               gscs: 4.7,
+              sgm: 4.7,
+              latitude: -14.2350,
+              longitude: -51.9253,
               sti: 55,
               category: "Soft Supremacism",
               description: "Brazil demonstrates soft supremacism with persistent racial and economic inequalities despite formal legal equality. Social mobility remains limited for marginalized groups.",
@@ -432,6 +447,9 @@ const WorldMap = () => {
               srsD: 3.7,
               srsI: 3.9,
               gscs: 3.8,
+              sgm: 3.8,
+              latitude: 46.2276,
+              longitude: 2.2137,
               sti: 40,
               category: "Mixed Governance",
               description: "France shows mixed governance with strong republican values alongside challenges integrating minority communities. Colonial legacy impacts domestic and international relations.",
@@ -444,6 +462,9 @@ const WorldMap = () => {
               srsD: 4.2,
               srsI: 3.1,
               gscs: 3.6,
+              sgm: 3.6,
+              latitude: 36.2048,
+              longitude: 138.2529,
               sti: 65,
               category: "Mixed Governance",
               description: "Japan demonstrates mixed governance with strong cohesion for dominant ethnic groups but challenges with minority integration and gender equality.",
@@ -456,6 +477,9 @@ const WorldMap = () => {
               srsD: 5.1,
               srsI: 3.2,
               gscs: 4.1,
+              sgm: 4.1,
+              latitude: -30.5595,
+              longitude: 22.9375,
               sti: 48,
               category: "Soft Supremacism",
               description: "South Africa shows signs of soft supremacism despite strong constitutional protections. Post-apartheid transition continues with economic disparities along historical lines.",
@@ -468,6 +492,9 @@ const WorldMap = () => {
               srsD: 3.6,
               srsI: 3.1,
               gscs: 3.3,
+              sgm: 3.3,
+              latitude: -25.2744,
+              longitude: 133.7751,
               sti: 35,
               category: "Mixed Governance",
               description: "Australia exhibits mixed governance with ongoing reconciliation efforts for indigenous peoples alongside strong democratic institutions.",
@@ -480,6 +507,9 @@ const WorldMap = () => {
               srsD: 3.2,
               srsI: 2.4,
               gscs: 2.8,
+              sgm: 2.8,
+              latitude: 56.1304,
+              longitude: -106.3468,
               sti: 30,
               category: "Mixed Governance",
               description: "Canada shows mixed governance with multicultural frameworks and reconciliation efforts for indigenous communities. Strong legal protections with ongoing social challenges.",
@@ -492,6 +522,9 @@ const WorldMap = () => {
               srsD: 3.9,
               srsI: 4.1,
               gscs: 4.0,
+              sgm: 4.0,
+              latitude: 55.3781,
+              longitude: -3.4360,
               sti: 45,
               category: "Mixed Governance",
               description: "The United Kingdom demonstrates mixed governance with strong democratic institutions alongside challenges with post-colonial relationships and integration of minority communities.",
@@ -504,6 +537,9 @@ const WorldMap = () => {
               srsD: 5.3,
               srsI: 3.1,
               gscs: 4.2,
+              sgm: 4.2,
+              latitude: 23.6345,
+              longitude: -102.5528,
               sti: 52,
               category: "Soft Supremacism",
               description: "Mexico exhibits soft supremacism with persistent inequalities along ethnic and economic lines. Indigenous communities face systemic challenges despite constitutional protections.",
@@ -516,6 +552,9 @@ const WorldMap = () => {
               srsD: 3.8,
               srsI: 3.3,
               gscs: 3.5,
+              sgm: 3.5,
+              latitude: 40.4637,
+              longitude: -3.7492,
               sti: 38,
               category: "Mixed Governance",
               description: "Spain shows mixed governance with regional autonomy structures alongside ongoing tensions related to regional identities and migrant communities.",
@@ -586,7 +625,7 @@ const WorldMap = () => {
           </Button>
 
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-serif text-white drop-shadow-lg">Supremacist World Map</h1>
+            <h1 className="text-4xl font-serif text-white drop-shadow-lg">Supremacism-Egalitarianism Map</h1>
             <div className="flex space-x-4">
               <Button
                 variant="outline"
@@ -628,7 +667,8 @@ const WorldMap = () => {
                   <Info className="h-4 w-4" />
                   <AlertTitle className="text-white">Data Updated</AlertTitle>
                   <AlertDescription className="text-gray-300">
-                    Supremacist governance data was last refreshed on {lastUpdated.toLocaleDateString()}, incorporating the latest reports from international monitoring agencies.
+                    Supremacist-Egalitarianism data was last refreshed on {lastUpdated.toLocaleDateString()},
+                    incorporating the latest reports from international monitoring agencies.
                   </AlertDescription>
                 </Alert>
               )}
@@ -642,11 +682,13 @@ const WorldMap = () => {
                 </TabsList>
 
                 <TabsContent value="map">
-                  <LeafletWorldMap
-                    countries={sgmData}
-                    onSelectCountry={setSelectedCountry}
-                    isLoading={isLoading}
-                  />
+                  <div className="bg-white p-1 rounded-lg overflow-hidden shadow-xl mb-4">
+                    {/* Container with white background to make the map stand out from the dark theme */}
+                    <LeafletHeatMap
+                      countries={sgmData}
+                      isLoading={isLoading}
+                    />
+                  </div>
                   <SupremacismLegend />
                 </TabsContent>
 
@@ -666,7 +708,7 @@ const WorldMap = () => {
                         <CountryDetail country={selectedCountry} />
                       ) : (
                         <div className="bg-black/40 p-6 rounded-lg border border-white/10 mt-4 text-center py-12">
-                          <p className="text-gray-300">Select a country to view detailed supremacism analysis</p>
+                          <p className="text-gray-300">Select a country to view detailed analysis</p>
                         </div>
                       )}
                     </div>
@@ -676,12 +718,13 @@ const WorldMap = () => {
                 <TabsContent value="trends">
                   <div className="space-y-6">
                     <div className="bg-black/30 p-6 rounded-lg border border-white/10">
-                      <h2 className="text-2xl text-white mb-4">Global Supremacism Trend Analysis</h2>
+                      <h2 className="text-2xl text-white mb-4">Global Thermodynamic Analysis</h2>
                       <p className="text-gray-300 mb-4">
-                        Track worldwide changes in governance models according to the Supremacist Governance Methodology (SGM).
+                        Track worldwide thermodynamic-like patterns in the flow between supremacism and egalitarianism
+                        according to the Supremacist-Egalitarianism Methodology.
                       </p>
                       <div className="h-64 bg-black/40 rounded border border-white/10 flex items-center justify-center">
-                        <span className="text-gray-400">Trend chart visualization coming soon</span>
+                        <span className="text-gray-400">Thermodynamic trend chart visualization coming soon</span>
                       </div>
                     </div>
 
@@ -695,33 +738,33 @@ const WorldMap = () => {
                 <TabsContent value="research">
                   <div className="space-y-6">
                     <div className="bg-black/30 p-6 rounded-lg border border-white/10">
-                      <h2 className="text-2xl text-white mb-4">Supremacist Governance Methodology (SGM)</h2>
+                      <h2 className="text-2xl text-white mb-4">Fundamental Laws of Supremacism & Egalitarianism</h2>
                       <p className="text-gray-300">
-                        The SGM is a comprehensive framework that quantifies, tracks, and predicts supremacist or egalitarian governance dynamics.
-                        It integrates several core components to provide a holistic assessment of governance patterns.
+                        These laws provide a framework analogous to thermodynamics for understanding social power dynamics.
+                        The heatmap visualization demonstrates how these forces behave with thermodynamic-like properties.
                       </p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         <div className="bg-black/40 p-4 rounded-lg border border-white/10">
                           <h3 className="text-lg text-white mb-2">Core Components</h3>
                           <ul className="space-y-2 text-gray-300">
-                            <li>• <span className="text-white">Supremacism Spectrum:</span> 0-10 scale measuring governance models</li>
-                            <li>• <span className="text-white">Dual Supremacist Risk Scores:</span> Separate metrics for domestic (SRS-D) and international (SRS-I)</li>
-                            <li>• <span className="text-white">GSCS:</span> Combined score representing overall supremacism level</li>
+                            <li>• <span className="text-white">Supremacism-Egalitarianism Spectrum:</span> 0-10 scale measuring governance models</li>
+                            <li>• <span className="text-white">Dual Risk Scores:</span> Separate metrics for domestic (SRS-D) and international (SRS-I)</li>
+                            <li>• <span className="text-white">GSCS/SGM:</span> Combined score representing overall position on the spectrum</li>
                             <li>• <span className="text-white">Stability and Transition Index:</span> Measures governance stability</li>
                           </ul>
                         </div>
 
                         <div className="bg-black/40 p-4 rounded-lg border border-white/10">
-                          <h3 className="text-lg text-white mb-2">Current Implementation</h3>
+                          <h3 className="text-lg text-white mb-2">Thermodynamic Properties</h3>
                           <p className="text-gray-300 text-sm">
-                            This implementation of SGM relies primarily on GDELT conflict data and calculates scores based on:
+                            The Supremacism-Egalitarianism framework demonstrates properties analogous to thermodynamics:
                           </p>
                           <ul className="space-y-1 text-gray-300 text-sm mt-2">
-                            <li>• Conflict event frequency</li>
-                            <li>• Event tone analysis</li>
-                            <li>• Goldstein scale measurements</li>
-                            <li>• Geopolitical patterns</li>
+                            <li>• Flow from high-concentration to low-concentration regions</li>
+                            <li>• Conservation of total power within closed systems</li>
+                            <li>• Entropy-like tendency toward disorder in unregulated systems</li>
+                            <li>• Resistance to change requiring energy input</li>
                           </ul>
                         </div>
                       </div>
@@ -740,21 +783,22 @@ const WorldMap = () => {
                     <div className="bg-black/30 p-6 rounded-lg border border-white/10">
                       <h2 className="text-2xl text-white mb-4">Data Sources & API</h2>
                       <p className="text-gray-300 mb-4">
-                        The supremacism data is compiled primarily from GDELT and updated by the SGM service. Researchers can access the raw data through our API.
+                        The supremacism-egalitarianism data is compiled primarily from GDELT and updated by our service.
+                        Researchers can access the raw data through our API.
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-black/40 p-4 rounded-lg border border-white/10">
                           <h3 className="text-lg text-white mb-2">API Endpoints</h3>
                           <ul className="space-y-1 text-gray-300 text-sm">
-                            <li>• <code className="bg-black/50 px-1 rounded">GET /sgm/countries</code> - Get all country scores</li>
-                            <li>• <code className="bg-black/50 px-1 rounded">GET /sgm/countries/{'{country_code}'}</code> - Get specific country</li>
-                            <li>• <code className="bg-black/50 px-1 rounded">GET /sgm/run-analysis</code> - Trigger new analysis</li>
+                            <li>• <code className="bg-black/50 px-1 rounded">GET /api/countries</code> - Get all country scores</li>
+                            <li>• <code className="bg-black/50 px-1 rounded">GET /api/countries/{'{country_code}'}</code> - Get specific country</li>
+                            <li>• <code className="bg-black/50 px-1 rounded">GET /api/run-analysis</code> - Trigger new analysis</li>
                           </ul>
                         </div>
                         <div className="bg-black/40 p-4 rounded-lg border border-white/10">
                           <h3 className="text-lg text-white mb-2">Download Data</h3>
                           <p className="text-gray-300 text-sm mb-4">
-                            You can download the SGM data in different formats for research purposes.
+                            You can download the data in different formats for research purposes.
                           </p>
                           <Button
                             variant="outline"
@@ -765,7 +809,7 @@ const WorldMap = () => {
                               const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
 
                               // Create download link
-                              const exportFileDefaultName = 'sgm_data.json';
+                              const exportFileDefaultName = 'supremacism_egalitarianism_data.json';
                               const linkElement = document.createElement('a');
                               linkElement.setAttribute('href', dataUri);
                               linkElement.setAttribute('download', exportFileDefaultName);
