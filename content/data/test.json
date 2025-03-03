@@ -2,7 +2,7 @@
   "collection_type": "data",
   "sections": [
     {
-      "featured": true,
+      "featured": false,
       "title": "Thank You for Visiting",
       "content_level_3": "Come back soon."
     }
