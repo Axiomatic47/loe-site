@@ -12,7 +12,6 @@ import Contact from "./pages/Contact";
 import Partners from "./pages/Partners";
 import Donate from "./pages/Donate";
 import WorldMap from "./pages/WorldMap";
-import DebugPage from "./pages/Debug";
 import AdminLink from "./components/AdminLink";
 
 const queryClient = new QueryClient();
@@ -51,8 +50,7 @@ const App = () => (
           <Route path="/donate" element={<Donate />} />
           <Route path="/admin/*" element={<AdminPage />} />
 
-          {/* Debug route */}
-          <Route path="/debug" element={<DebugPage />} />
+          {/* Debug route removed */}
         </Routes>
 
         {/* Admin Link for development */}
