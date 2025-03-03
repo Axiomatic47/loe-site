@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
@@ -29,6 +29,7 @@ const countryCodeToName = {
   NZ: "New Zealand",
 };
 
+// Category function based on score
 const getCategory = (score) => {
   if (score <= 2) return "Strong Egalitarianism";
   if (score <= 4) return "Mixed Governance";
@@ -93,14 +94,23 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     if (!mapInstanceRef.current && mapRef.current) {
       const L = window.L;
 
-      // Create map with light theme
+      // Create map with light theme and restricted bounds
       mapInstanceRef.current = L.map(mapRef.current, {
-        center: [20, 0],
-        zoom: 2,
-        minZoom: 1.5,
+        center: [10, 0], // Adjust center to be slightly lower for better world fit
+        zoom: 1.75, // Lower initial zoom to fit the entire world
+        minZoom: 1.5, // Allow slightly more zoom out for smaller screens
         maxZoom: 6,
-        zoomControl: false,
-        attributionControl: false
+        maxBounds: [[-90, -195], [90, 195]], // Slightly wider bounds for better view
+        maxBoundsViscosity: 1.0, // Prevent dragging outside bounds
+        worldCopyJump: false, // Disable world copying when panning
+        zoomControl: false, // We'll add custom zoom controls
+        attributionControl: false, // We'll add custom attribution
+        scrollWheelZoom: 'center', // Zoom to cursor position
+        zoomDelta: 0.5, // Smoother zoom steps
+        zoomSnap: 0.25, // Finer zoom level snapping
+        inertia: true, // Enable inertia for smoother panning
+        inertiaDeceleration: 3000, // Slow down inertia for smoother stops
+        easeLinearity: 0.1 // Make zooming feel more natural
       });
 
       // Add light-themed base map
@@ -108,6 +118,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20,
+        noWrap: true, // Prevent the map from repeating horizontally
       }).addTo(mapInstanceRef.current);
 
       // Add attribution in a subtle way
@@ -122,26 +133,64 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
       zoomControl.onAdd = function() {
         const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar bg-black/50 backdrop-blur-sm rounded shadow-lg p-1 border border-white/10');
 
-        // Zoom in button
-        const zoomInButton = L.DomUtil.create('button', 'mb-1 bg-black/50 hover:bg-black/70 text-white w-8 h-8 flex items-center justify-center rounded', container);
+        // Zoom in button with improved styling
+        const zoomInButton = L.DomUtil.create('button', 'mb-1 bg-black/50 hover:bg-black/70 text-white w-8 h-8 flex items-center justify-center rounded transition-colors', container);
         zoomInButton.innerHTML = '+';
+        zoomInButton.setAttribute('aria-label', 'Zoom in');
+        zoomInButton.style.fontSize = '18px';
         L.DomEvent.on(zoomInButton, 'click', function(e) {
           L.DomEvent.stopPropagation(e);
-          mapInstanceRef.current.setZoom(mapInstanceRef.current.getZoom() + 1);
+          mapInstanceRef.current.setZoom(mapInstanceRef.current.getZoom() + 0.5, {
+            animate: true
+          });
         });
 
-        // Zoom out button
-        const zoomOutButton = L.DomUtil.create('button', 'bg-black/50 hover:bg-black/70 text-white w-8 h-8 flex items-center justify-center rounded', container);
+        // Zoom out button with improved styling
+        const zoomOutButton = L.DomUtil.create('button', 'bg-black/50 hover:bg-black/70 text-white w-8 h-8 flex items-center justify-center rounded transition-colors', container);
         zoomOutButton.innerHTML = '−';
+        zoomOutButton.setAttribute('aria-label', 'Zoom out');
+        zoomOutButton.style.fontSize = '18px';
         L.DomEvent.on(zoomOutButton, 'click', function(e) {
           L.DomEvent.stopPropagation(e);
-          mapInstanceRef.current.setZoom(mapInstanceRef.current.getZoom() - 1);
+          mapInstanceRef.current.setZoom(mapInstanceRef.current.getZoom() - 0.5, {
+            animate: true
+          });
         });
 
         return container;
       };
 
       zoomControl.addTo(mapInstanceRef.current);
+
+      // Add helpful touch instructions for mobile users
+      if ('ontouchstart' in window) {
+        const touchInstructions = L.control({position: 'bottomleft'});
+        touchInstructions.onAdd = function() {
+          const container = L.DomUtil.create('div', 'bg-black/60 text-white text-xs p-2 rounded');
+          container.innerHTML = 'Use two fingers to zoom and pan the map';
+          setTimeout(() => {
+            container.style.display = 'none';
+          }, 5000); // Hide after 5 seconds
+          return container;
+        };
+        touchInstructions.addTo(mapInstanceRef.current);
+      }
+
+      // Fit world bounds properly after map is created
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          // Set world bounds that will show the entire world
+          const worldBounds = L.latLngBounds(
+            L.latLng(-60, -170), // Southwest corner - excluding Antarctica for better fit
+            L.latLng(75, 170)    // Northeast corner - excluding northernmost areas
+          );
+
+          mapInstanceRef.current.fitBounds(worldBounds, {
+            animate: false,
+            padding: [10, 10] // Add a bit of padding
+          });
+        }
+      }, 100);
     }
 
     // Resize handler on initial load
@@ -334,6 +383,46 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     }
   }, [countries, scriptLoaded, onSelectCountry]);
 
+  // Adapt the map to container size changes
+  useEffect(() => {
+    if (!mapInstanceRef.current || !scriptLoaded) return;
+
+    const handleResize = () => {
+      if (!mapInstanceRef.current) return;
+
+      mapInstanceRef.current.invalidateSize();
+
+      // Check if the map container aspect ratio has changed significantly
+      const container = mapRef.current;
+      if (container) {
+        const aspectRatio = container.clientWidth / container.clientHeight;
+
+        // If the aspect ratio is very wide or very tall, adjust the view
+        if (aspectRatio > 2.5 || aspectRatio < 1) {
+          // Set world bounds that will show the entire world
+          const worldBounds = L.latLngBounds(
+            L.latLng(-60, -170),
+            L.latLng(75, 170)
+          );
+
+          mapInstanceRef.current.fitBounds(worldBounds, {
+            animate: false,
+            padding: [10, 10]
+          });
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Initial size adjustment
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [mapInstanceRef.current, scriptLoaded]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -368,10 +457,22 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     };
   }, []);
 
-  // Handle reset view
+  // Handle reset view with smoother animation - modified to show entire world
   const handleResetView = () => {
     if (!mapInstanceRef.current) return;
-    mapInstanceRef.current.setView([20, 0], 2);
+
+    // Use world bounds that will show the entire world
+    const worldBounds = L.latLngBounds(
+      L.latLng(-60, -170), // Southwest corner - excluding Antarctica for better fit
+      L.latLng(75, 170)    // Northeast corner - excluding northernmost areas
+    );
+
+    mapInstanceRef.current.fitBounds(worldBounds, {
+      animate: true,
+      duration: 0.75,
+      easeLinearity: 0.25,
+      padding: [10, 10] // Add a bit of padding
+    });
   };
 
   return (
@@ -423,10 +524,10 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
       </div>
 
       {/* Map container with improved styling */}
-      <div className="relative h-96 rounded-lg overflow-hidden shadow-lg">
+      <div className="relative h-96 md:h-[450px] lg:h-[500px] rounded-lg overflow-hidden shadow-lg">
         <div
           ref={mapRef}
-          className="h-96 bg-white relative w-full"
+          className="h-full w-full bg-white relative"
         />
 
         {(isLoading || !scriptLoaded) && (
