@@ -1,4 +1,5 @@
-// src/pages/SectionPage.tsx - Fixed loading logic
+// src/pages/SectionPage.tsx
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
@@ -18,33 +19,19 @@ const SectionPage = () => {
   const navigate = useNavigate();
   const store = useCompositionStore();
   const { isSidebarOpen, setIsSidebarOpen, isMobile } = useMobileNavigation();
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Single useEffect for loading data - only refresh compositions once
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        // Only load compositions if not already initialized
-        if (!store.initialized || store.manuscript.length === 0) {
-          await store.refreshCompositions();
-        }
-      } catch (error) {
-        console.error('Error loading compositions:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!store.loading) {
+      store.refreshCompositions();
+    }
+  }, [store]);
 
-    loadData();
-  }, [store.initialized, store.manuscript.length, store.refreshCompositions]);
-
-  // Scroll to top when section changes
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    // Scroll the main content area to the top when section changes
+    const mainContentArea = document.querySelector('.main-content-area');
+    if (mainContentArea) {
+      mainContentArea.scrollTop = 0;
+    }
   }, [sectionId]);
 
   // Get compositions based on the ID
@@ -75,51 +62,23 @@ const SectionPage = () => {
   };
 
   const compositions = getCompositions();
-  const compIndex = parseInt(compositionIndex) - 1;
-  const currentComposition = compositions.length > 0 && compIndex >= 0 && compIndex < compositions.length
-    ? compositions[compIndex]
-    : null;
-
-  const sectIndex = parseInt(sectionId) - 1;
-  const currentSection = currentComposition?.sections &&
-    Array.isArray(currentComposition.sections) &&
-    sectIndex >= 0 &&
-    sectIndex < currentComposition.sections.length
-      ? currentComposition.sections[sectIndex]
-      : null;
+  const currentComposition = compositions[parseInt(compositionIndex) - 1];
+  const currentSection = currentComposition?.sections?.[parseInt(sectionId) - 1];
 
   const handleSectionChange = (newSectionId: number) => {
-    // Ensure we stay within valid section range
-    if (currentComposition && newSectionId > 0 && newSectionId <= currentComposition.sections.length) {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-
-      if (isMobile) {
-        setIsSidebarOpen(false);
-      }
-
-      // Determine if we need to use a different navigation approach for Safari
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-      if (isSafari) {
-        // For Safari, use direct window.location to prevent freezing
-        setTimeout(() => {
-          // Add the navigating class to disable complex animations
-          document.documentElement.classList.add('navigating');
-
-          setTimeout(() => {
-            window.location.href = `/composition/${compositionId}/composition/${compositionIndex}/section/${newSectionId}`;
-          }, 10);
-        }, 100);
-      } else {
-        // For other browsers, use React Router
-        setTimeout(() => {
-          navigate(`/composition/${compositionId}/composition/${compositionIndex}/section/${newSectionId}`);
-        }, 100);
-      }
+    // Scroll the main content area to the top
+    const mainContentArea = document.querySelector('.main-content-area');
+    if (mainContentArea) {
+      mainContentArea.scrollTop = 0;
     }
+
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+
+    setTimeout(() => {
+      navigate(`/composition/${compositionId}/composition/${compositionIndex}/section/${newSectionId}`);
+    }, 100);
   };
 
   const handleLiteracyChange = (value: number[]) => {
@@ -161,20 +120,6 @@ const SectionPage = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageLayout>
-        <div className="container mx-auto px-4 py-12">
-          <div className="backdrop-blur-md bg-black/40 rounded-lg p-8 border border-white/10">
-            <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-2xl mb-4 text-white drop-shadow-lg">Loading...</h1>
-            </div>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
-
   if (!currentSection || !currentComposition) {
     return (
       <PageLayout>
@@ -183,14 +128,7 @@ const SectionPage = () => {
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-2xl mb-4 text-white drop-shadow-lg">Section Not Found</h1>
               <button
-                onClick={() => {
-                  // For Safari use direct window location
-                  if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
-                    window.location.href = `/composition/${compositionId}`;
-                  } else {
-                    navigate(`/composition/${compositionId}`);
-                  }
-                }}
+                onClick={() => navigate(`/composition/${compositionId}`)}
                 className="text-blue-400 hover:text-blue-300"
               >
                 Return to Composition List
@@ -204,46 +142,46 @@ const SectionPage = () => {
 
   return (
     <PageLayout>
-      <div className="navigation-indicator"></div>
-      <div className="flex">
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* Sidebar Navigation */}
         <MobileNavigation
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
         >
-          <div className="fixed w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-none">
-            <div className="p-6">
-              <div className="mb-6">
-                <h2 className="text-lg font-serif text-white drop-shadow-lg mb-1">
-                  {getCollectionTitle(compositionId)}
-                </h2>
-                <h3 className="text-sm text-gray-200">{currentComposition.title}</h3>
-              </div>
-
-              <nav className="space-y-2 pb-16">
-                {currentComposition.sections.map((section, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSectionChange(index + 1)}
-                    className={cn(
-                      "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
-                      index + 1 === parseInt(sectionId)
-                        ? "bg-white/20 text-white font-medium backdrop-blur-md"
-                        : "text-gray-200 hover:bg-white/10 hover:text-white"
-                    )}
-                  >
-                    {section.title}
-                  </button>
-                ))}
-              </nav>
+          <div className="p-6">
+            <div className="mb-6">
+              <h2 className="text-lg font-serif text-white drop-shadow-lg mb-1">
+                {getCollectionTitle(compositionId)}
+              </h2>
+              <h3 className="text-sm text-gray-200">{currentComposition.title}</h3>
             </div>
+
+            <nav className="space-y-2 pb-16">
+              {currentComposition.sections.map((section, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSectionChange(index + 1)}
+                  className={cn(
+                    "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
+                    index + 1 === parseInt(sectionId)
+                      ? "bg-white/20 text-white font-medium backdrop-blur-md"
+                      : "text-gray-200 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  {section.title}
+                </button>
+              ))}
+            </nav>
           </div>
         </MobileNavigation>
 
-        {/* Main Content */}
-        <main className={cn(
-          "flex-1 overflow-y-auto min-h-screen",
-          isMobile && isSidebarOpen ? "ml-64" : ""
-        )}>
+        {/* Main Content with independent scrolling */}
+        <main
+          className={cn(
+            "main-content-area flex-1 overflow-y-auto",
+            !isMobile ? "ml-64" : "" // Add margin to make space for fixed sidebar on desktop
+          )}
+        >
           <div className="p-8">
             <div className="max-w-3xl mx-auto backdrop-blur-md bg-black/80 p-8 rounded-lg border border-white/10">
               <div className="mb-8">

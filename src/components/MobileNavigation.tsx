@@ -1,3 +1,5 @@
+// src/components/MobileNavigation.tsx
+
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,9 +36,10 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   const isMobile = useIsMobile();
 
   if (!isMobile) {
+    // For desktop: Fixed position sidebar with independent scrolling
     return (
-      <aside className="w-64 border-r border-white/10 bg-black/80 backdrop-blur-md">
-        <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+      <aside className="fixed top-16 left-0 bottom-0 w-64 border-r border-white/10 bg-black/80 backdrop-blur-md z-30">
+        <div className="h-full overflow-y-auto sidebar-scroll no-scrollbar">
           {children}
         </div>
       </aside>
@@ -44,7 +47,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   }
 
   return (
-    <aside className="grid grid-cols-[1px,auto,1fr] fixed inset-0 top-16 pointer-events-none">
+    <aside className="grid grid-cols-[1px,auto,1fr] fixed inset-0 top-16 pointer-events-none z-30">
       {/* Grid Layout:
           1. Vertical line (1px)
           2. Button + Navigation area (auto)
@@ -89,7 +92,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="h-full overflow-y-auto">
+          <div className="h-full overflow-y-auto sidebar-scroll no-scrollbar">
             {children}
           </div>
         </div>

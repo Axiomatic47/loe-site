@@ -226,6 +226,124 @@ html {
     content: '';
     @apply absolute inset-0 backdrop-blur-sm bg-black/20 -z-10 rounded-lg;
   }
+
+  /* Fixed sidebar styles */
+  .sidebar-fixed {
+    position: fixed;
+    top: 4rem; /* Adjust based on your header height */
+    left: 0;
+    bottom: 0;
+    width: 16rem; /* 64px - matches with w-64 */
+    z-index: 40;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+  }
+
+  /* Main content area with space for the sidebar */
+  .content-with-sidebar {
+    margin-left: 16rem; /* 64px - matches sidebar width */
+  }
+
+  /* Independent scrolling styles for main content and sidebar */
+  .main-content-area {
+    overflow-y: auto;
+    height: calc(100vh - 4rem); /* Adjust based on your header height */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .main-content-area::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .main-content-area::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .main-content-area::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+  }
+
+  .sidebar-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+  }
+
+  /* Ensure the sidebar is always visible on desktop and stays on top */
+  @media (min-width: 768px) {
+    .sidebar-fixed {
+      display: block;
+    }
+  }
+
+  /* On mobile, the sidebar should be hidden by default */
+  @media (max-width: 767px) {
+    .sidebar-fixed {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-fixed.open {
+      transform: translateX(0);
+    }
+
+    .content-with-sidebar {
+      margin-left: 0;
+    }
+  }
+
+  /* Fix for mobile browsers */
+  @media (max-width: 767px) {
+    /* Use position: fixed with top and bottom offsets */
+    .sidebar-container {
+      position: fixed;
+      top: 4rem; /* Match your header height */
+      bottom: 0;
+      left: 0;
+      width: 16rem;
+      z-index: 40;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .sidebar-container.open {
+      transform: translateX(0);
+    }
+
+    .main-content-area {
+      margin-left: 0;
+    }
+  }
+
+  /* Fix for Safari */
+  @supports (-webkit-backdrop-filter: none) {
+    .sidebar-container {
+      -webkit-backdrop-filter: blur(8px);
+      background-color: rgba(0, 0, 0, 0.75);
+    }
+  }
 }
 
 @layer utilities {
@@ -239,4 +357,46 @@ html {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+}
+
+/* Styles for when navigation is in progress */
+html.navigating {
+  /* Disable all animations and transitions during navigation */
+  --global-transition-duration: 0s !important;
+}
+
+html.navigating * {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-delay: 0s !important;
+  animation-iteration-count: 0 !important;
+}
+
+/* Disable backdrop filters during navigation to prevent Safari freezing */
+html.navigating .backdrop-blur-md,
+html.navigating .backdrop-blur-sm,
+html.navigating .blur-panel,
+html.navigating .content-panel {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Navigation indicator that shows when page is transitioning */
+.navigation-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.7), transparent);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+html.navigating .navigation-indicator {
+  opacity: 1;
 }

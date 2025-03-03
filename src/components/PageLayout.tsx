@@ -19,7 +19,14 @@ export const PageLayout = ({ children, className = '' }: PageLayoutProps) => {
   const MAX_PULL_DISTANCE = 800;
 
   useEffect(() => {
-const handleWheel = (e: WheelEvent) => {
+    const handleWheel = (e: WheelEvent) => {
+      // Only apply the elastic effect to the main window scroll
+      // Skip if the event target is inside a scrollable sidebar or main content
+      if ((e.target as HTMLElement)?.closest('.main-content-area') ||
+          (e.target as HTMLElement)?.closest('.sidebar-scroll')) {
+        return;
+      }
+
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
       }
@@ -43,11 +50,23 @@ const handleWheel = (e: WheelEvent) => {
     };
 
     const handleTouchStart = (e: TouchEvent) => {
+      // Skip if the event target is inside a scrollable sidebar or main content
+      if ((e.target as HTMLElement)?.closest('.main-content-area') ||
+          (e.target as HTMLElement)?.closest('.sidebar-scroll')) {
+        return;
+      }
+
       lastScrollY.current = e.touches[0].clientY;
       isScrolling.current = true;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      // Skip if the event target is inside a scrollable sidebar or main content
+      if ((e.target as HTMLElement)?.closest('.main-content-area') ||
+          (e.target as HTMLElement)?.closest('.sidebar-scroll')) {
+        return;
+      }
+
       const element = contentRef.current;
       const isAtTop = window.scrollY === 0;
       const isAtBottom = element &&
