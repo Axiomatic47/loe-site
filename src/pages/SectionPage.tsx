@@ -1,3 +1,4 @@
+// src/pages/SectionPage.tsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
@@ -8,9 +9,10 @@ import rehypeRaw from 'rehype-raw';
 import { useCompositionStore } from "@/utils/compositionData";
 import { PageLayout } from "@/components/PageLayout";
 import { cn } from "@/lib/utils";
-import MobileNavigation, { useMobileNavigation } from "@/components/MobileNavigation.tsx";
+import MobileNavigation, { useMobileNavigation } from "@/components/MobileNavigation";
 
 const SectionPage = () => {
+  // Fixed URL parameter handling with proper defaults
   const { compositionId = "", compositionIndex = "1", sectionId = "1" } = useParams();
   const [literacyLevel, setLiteracyLevel] = useState(3);
   const { toast } = useToast();
@@ -57,22 +59,36 @@ const SectionPage = () => {
   };
 
   const compositions = getCompositions();
-  const currentComposition = compositions[parseInt(compositionIndex) - 1];
-  const currentSection = currentComposition?.sections?.[parseInt(sectionId) - 1];
+  const compIndex = parseInt(compositionIndex) - 1;
+  const currentComposition = compositions.length > 0 && compIndex >= 0 && compIndex < compositions.length
+    ? compositions[compIndex]
+    : null;
+
+  const sectIndex = parseInt(sectionId) - 1;
+  const currentSection = currentComposition?.sections &&
+    Array.isArray(currentComposition.sections) &&
+    sectIndex >= 0 &&
+    sectIndex < currentComposition.sections.length
+      ? currentComposition.sections[sectIndex]
+      : null;
 
   const handleSectionChange = (newSectionId: number) => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    // Ensure we stay within valid section range
+    if (currentComposition && newSectionId > 0 && newSectionId <= currentComposition.sections.length) {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
 
-    if (isMobile) {
-      setIsSidebarOpen(false);
+      if (isMobile) {
+        setIsSidebarOpen(false);
+      }
+
+      setTimeout(() => {
+        // Fixed navigation path format
+        navigate(`/composition/${compositionId}/composition/${compositionIndex}/section/${newSectionId}`);
+      }, 100);
     }
-
-    setTimeout(() => {
-      navigate(`/composition/${compositionId}/${compositionIndex}/${newSectionId}`);
-    }, 100);
   };
 
   const handleLiteracyChange = (value: number[]) => {
