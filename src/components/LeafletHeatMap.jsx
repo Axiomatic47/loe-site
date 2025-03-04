@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
@@ -81,12 +82,37 @@ const patchLeafletHeat = () => {
   };
 };
 
-const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
+/**
+ * LeafletHeatMap Component
+ * @param {Object} props - Component props
+ * @param {Array} [props.countries] - Array of country data objects
+ * @param {Array} [props.events] - Array of conflict event objects
+ * @param {Function} [props.onSelectCountry] - Callback when country is selected
+ * @param {Function} [props.onSelectEvent] - Callback when event is selected
+ * @param {boolean} [props.isLoading] - Whether data is loading
+ * @param {boolean} [props.showGDELT] - Whether to show GDELT data
+ * @param {boolean} [props.showACLED] - Whether to show ACLED data
+ * @param {boolean} [props.showCountries] - Whether to show country data
+ */
+const LeafletHeatMap = ({
+  countries = [],
+  events = [],
+  onSelectCountry,
+  onSelectEvent,
+  isLoading = false,
+  showGDELT = true,
+  showACLED = true,
+  showCountries = true
+}) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const heatLayerRef = useRef(null);
+  const countryHeatLayerRef = useRef(null);
+  const acledHeatLayerRef = useRef(null);
+  const gdeltHeatLayerRef = useRef(null);
+  const markersLayerRef = useRef(null);
   const leafletLoadedRef = useRef(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [dataOption, setDataOption] = useState('all'); // 'all', 'countries', or 'events'
 
   // Load Leaflet and HeatMap plugin scripts dynamically
   useEffect(() => {
@@ -139,7 +165,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     if (!mapInstanceRef.current && mapRef.current) {
       const L = window.L;
 
-      // Create map with light theme and restricted bounds
+      // Create map with dark theme and restricted bounds
       mapInstanceRef.current = L.map(mapRef.current, {
         center: [10, 0], // Adjust center to be slightly lower for better world fit
         zoom: 1.75, // Lower initial zoom to fit the entire world
@@ -157,6 +183,9 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         inertiaDeceleration: 3000, // Slow down inertia for smoother stops
         easeLinearity: 0.1 // Make zooming feel more natural
       });
+
+      // Create a layer for markers
+      markersLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current);
 
       // Add map tiles with a dark theme for better contrast with the heatmap
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -277,6 +306,11 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
             font-weight: 600;
             margin-bottom: 8px;
           }
+          .event-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+          }
           .score-row {
             display: flex;
             justify-content: space-between;
@@ -294,10 +328,26 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
             color: rgba(255, 255, 255, 0.6);
             text-align: center;
           }
+          .source-label {
+            font-size: 11px;
+            margin-top: 6px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: right;
+          }
 
           /* Fix for canvas elements to add willReadFrequently */
           canvas.leaflet-heatmap-layer {
             will-change: contents;
+          }
+
+          /* Custom marker styles */
+          .gdelt-marker {
+            border: 2px solid rgba(255, 165, 0, 0.7);
+            background-color: rgba(255, 165, 0, 0.5);
+          }
+          .acled-marker {
+            border: 2px solid rgba(255, 0, 0, 0.7);
+            background-color: rgba(255, 0, 0, 0.5);
           }
         `;
         document.head.appendChild(style);
@@ -307,20 +357,54 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
     }
   }, [scriptLoaded]);
 
-  // Update heatmap when countries data changes
+  // Update the heatmap layers based on countries and events data
   useEffect(() => {
-    if (!scriptLoaded || !window.L || !mapInstanceRef.current || !countries || countries.length === 0) return;
+    if (!scriptLoaded || !window.L || !mapInstanceRef.current) return;
 
     const L = window.L;
 
     try {
-      // Remove existing heat layer if it exists
-      if (heatLayerRef.current) {
-        mapInstanceRef.current.removeLayer(heatLayerRef.current);
+      // Clear existing markers
+      if (markersLayerRef.current) {
+        markersLayerRef.current.clearLayers();
       }
 
-      // Prepare heat data points with enhanced intensity
-      const heatData = countries.map(country => {
+      // Create or update heat layers and add country/event markers
+      updateHeatmapLayers();
+
+    } catch (error) {
+      console.error('Error updating map layers:', error);
+    }
+  }, [countries, events, scriptLoaded, showGDELT, showACLED, showCountries, dataOption]);
+
+  // Function to update heatmap layers based on current data and options
+  const updateHeatmapLayers = () => {
+    if (!window.L || !mapInstanceRef.current) return;
+    const L = window.L;
+
+    // Remove existing heat layers
+    if (countryHeatLayerRef.current) {
+      mapInstanceRef.current.removeLayer(countryHeatLayerRef.current);
+      countryHeatLayerRef.current = null;
+    }
+    if (gdeltHeatLayerRef.current) {
+      mapInstanceRef.current.removeLayer(gdeltHeatLayerRef.current);
+      gdeltHeatLayerRef.current = null;
+    }
+    if (acledHeatLayerRef.current) {
+      mapInstanceRef.current.removeLayer(acledHeatLayerRef.current);
+      acledHeatLayerRef.current = null;
+    }
+
+    // Clear existing markers
+    if (markersLayerRef.current) {
+      markersLayerRef.current.clearLayers();
+    }
+
+    // Only create heatmap and markers if we have data and should show it
+    if (showCountries && countries.length > 0 && (dataOption === 'all' || dataOption === 'countries')) {
+      // Prepare heat data points for countries
+      const countryHeatData = countries.map(country => {
         // Extract coordinates and intensity from country data
         const lat = country.latitude || 0;
         const lng = country.longitude || 0;
@@ -344,7 +428,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         return [lat, lng, intensity];
       }).filter(point => point[0] !== 0 && point[1] !== 0); // Filter out points with zero coordinates
 
-      // Create heat layer with custom gradient - with enhanced visibility
+      // Create heat layer for countries with custom gradient
       const heatOptions = {
         radius: 40, // Increased size for better visibility
         blur: 30, // Increased blur for smoother gradient
@@ -362,9 +446,9 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         }
       };
 
-      heatLayerRef.current = L.heatLayer(heatData, heatOptions).addTo(mapInstanceRef.current);
+      countryHeatLayerRef.current = L.heatLayer(countryHeatData, heatOptions).addTo(mapInstanceRef.current);
 
-      // Add clickable markers on top of the heatmap for country selection
+      // Add clickable markers for countries
       countries.forEach(country => {
         const lat = country.latitude || 0;
         const lng = country.longitude || 0;
@@ -377,7 +461,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
           fillOpacity: 0,
           opacity: 0,
           interactive: true
-        }).addTo(mapInstanceRef.current);
+        }).addTo(markersLayerRef.current);
 
         // Add popup with country information
         marker.bindPopup(`
@@ -413,11 +497,202 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
           }
         });
       });
-
-    } catch (error) {
-      console.error('Error creating heatmap:', error);
     }
-  }, [countries, scriptLoaded, onSelectCountry]);
+
+    // Process GDELT events if they should be shown
+    if (showGDELT && events.length > 0 && (dataOption === 'all' || dataOption === 'events')) {
+      // Filter GDELT events
+      const gdeltEvents = events.filter(event => event.data_source === 'GDELT');
+
+      if (gdeltEvents.length > 0) {
+        // Prepare heat data for GDELT events
+        const gdeltHeatData = gdeltEvents.map(event => {
+          const lat = event.latitude || 0;
+          const lng = event.longitude || 0;
+          const intensity = event.intensity || 5;
+
+          // Return [lat, lng, intensity] format
+          return [lat, lng, intensity];
+        }).filter(point => point[0] !== 0 && point[1] !== 0);
+
+        // Create heat layer for GDELT events - using orange to yellow gradient
+        const gdeltHeatOptions = {
+          radius: 25,
+          blur: 15,
+          maxZoom: 10,
+          max: 10,
+          minOpacity: 0.3,
+          gradient: {
+            0.4: '#ffff00', // Yellow for lower intensity
+            0.65: '#ffa500', // Orange for medium
+            0.9: '#ff4500'   // Red-orange for higher intensity
+          }
+        };
+
+        gdeltHeatLayerRef.current = L.heatLayer(gdeltHeatData, gdeltHeatOptions).addTo(mapInstanceRef.current);
+
+        // Add individual event markers
+        gdeltEvents.forEach(event => {
+          const lat = event.latitude || 0;
+          const lng = event.longitude || 0;
+
+          if (lat === 0 || lng === 0) return; // Skip if no coordinates
+
+          // Create a visible marker for GDELT events
+          const marker = L.circleMarker([lat, lng], {
+            radius: 4,
+            fillColor: '#ffa500', // Orange for GDELT
+            color: '#ffffff',
+            weight: 1,
+            opacity: 0.7,
+            fillOpacity: 0.5,
+            className: 'gdelt-marker'
+          }).addTo(markersLayerRef.current);
+
+          // Add popup with event information
+          marker.bindPopup(`
+            <div>
+              <div class="event-title">${event.event_type || 'Event'}</div>
+              <div class="score-row">
+                <span class="score-label">Date:</span>
+                <span class="score-value">${new Date(event.event_date).toLocaleDateString()}</span>
+              </div>
+              <div class="score-row">
+                <span class="score-label">Location:</span>
+                <span class="score-value">${event.location || event.country || 'Unknown'}</span>
+              </div>
+              ${event.actor1 ? `
+              <div class="score-row">
+                <span class="score-label">Primary Actor:</span>
+                <span class="score-value">${event.actor1}</span>
+              </div>
+              ` : ''}
+              ${event.actor2 ? `
+              <div class="score-row">
+                <span class="score-label">Secondary Actor:</span>
+                <span class="score-value">${event.actor2}</span>
+              </div>
+              ` : ''}
+              ${event.description ? `
+              <div class="mt-2 text-sm text-gray-300">${event.description}</div>
+              ` : ''}
+              <div class="source-label">Source: GDELT</div>
+            </div>
+          `, {
+            className: 'custom-popup',
+            maxWidth: 250
+          });
+
+          // Handle click event
+          marker.on('click', () => {
+            if (onSelectEvent) {
+              onSelectEvent(event);
+            }
+          });
+        });
+      }
+    }
+
+    // Process ACLED events if they should be shown
+    if (showACLED && events.length > 0 && (dataOption === 'all' || dataOption === 'events')) {
+      // Filter ACLED events
+      const acledEvents = events.filter(event => event.data_source === 'ACLED');
+
+      if (acledEvents.length > 0) {
+        // Prepare heat data for ACLED events
+        const acledHeatData = acledEvents.map(event => {
+          const lat = event.latitude || 0;
+          const lng = event.longitude || 0;
+          const intensity = event.intensity || 5;
+
+          // Return [lat, lng, intensity] format
+          return [lat, lng, intensity];
+        }).filter(point => point[0] !== 0 && point[1] !== 0);
+
+        // Create heat layer for ACLED events - using red gradient
+        const acledHeatOptions = {
+          radius: 25,
+          blur: 15,
+          maxZoom: 10,
+          max: 10,
+          minOpacity: 0.3,
+          gradient: {
+            0.4: '#ff9999', // Light red for lower intensity
+            0.65: '#ff3333', // Medium red
+            0.9: '#cc0000'   // Dark red for higher intensity
+          }
+        };
+
+        acledHeatLayerRef.current = L.heatLayer(acledHeatData, acledHeatOptions).addTo(mapInstanceRef.current);
+
+        // Add individual event markers
+        acledEvents.forEach(event => {
+          const lat = event.latitude || 0;
+          const lng = event.longitude || 0;
+
+          if (lat === 0 || lng === 0) return; // Skip if no coordinates
+
+          // Create a visible marker for ACLED events
+          const marker = L.circleMarker([lat, lng], {
+            radius: 4,
+            fillColor: '#ff0000', // Red for ACLED
+            color: '#ffffff',
+            weight: 1,
+            opacity: 0.7,
+            fillOpacity: 0.5,
+            className: 'acled-marker'
+          }).addTo(markersLayerRef.current);
+
+          // Add popup with event information
+          marker.bindPopup(`
+            <div>
+              <div class="event-title">${event.event_type || 'Event'}</div>
+              <div class="score-row">
+                <span class="score-label">Date:</span>
+                <span class="score-value">${new Date(event.event_date).toLocaleDateString()}</span>
+              </div>
+              <div class="score-row">
+                <span class="score-label">Location:</span>
+                <span class="score-value">${event.location || event.country || 'Unknown'}</span>
+              </div>
+              ${event.fatalities ? `
+              <div class="score-row">
+                <span class="score-label">Fatalities:</span>
+                <span class="score-value">${event.fatalities}</span>
+              </div>
+              ` : ''}
+              ${event.actor1 ? `
+              <div class="score-row">
+                <span class="score-label">Primary Actor:</span>
+                <span class="score-value">${event.actor1}</span>
+              </div>
+              ` : ''}
+              ${event.actor2 ? `
+              <div class="score-row">
+                <span class="score-label">Secondary Actor:</span>
+                <span class="score-value">${event.actor2}</span>
+              </div>
+              ` : ''}
+              ${event.description ? `
+              <div class="mt-2 text-sm text-gray-300">${event.description}</div>
+              ` : ''}
+              <div class="source-label">Source: ACLED</div>
+            </div>
+          `, {
+            className: 'custom-popup',
+            maxWidth: 250
+          });
+
+          // Handle click event
+          marker.on('click', () => {
+            if (onSelectEvent) {
+              onSelectEvent(event);
+            }
+          });
+        });
+      }
+    }
+  };
 
   // Adapt the map to container size changes
   useEffect(() => {
@@ -436,6 +711,7 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         // If the aspect ratio is very wide or very tall, adjust the view
         if (aspectRatio > 2.5 || aspectRatio < 1) {
           // Set world bounds that will show the entire world
+          const L = window.L;
           const worldBounds = L.latLngBounds(
             L.latLng(-60, -170),
             L.latLng(75, 170)
@@ -466,8 +742,17 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
-      if (heatLayerRef.current) {
-        heatLayerRef.current = null;
+      if (countryHeatLayerRef.current) {
+        countryHeatLayerRef.current = null;
+      }
+      if (gdeltHeatLayerRef.current) {
+        gdeltHeatLayerRef.current = null;
+      }
+      if (acledHeatLayerRef.current) {
+        acledHeatLayerRef.current = null;
+      }
+      if (markersLayerRef.current) {
+        markersLayerRef.current = null;
       }
     };
   }, []);
@@ -528,9 +813,53 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
   return (
     <div className="bg-black/30 p-4 rounded-lg border border-white/10 mt-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium text-white">Global Supremacism-Egalitarianism Map</h3>
+        <h3 className="text-lg font-medium text-white">Global Conflict & Supremacism Map</h3>
 
         <div className="flex space-x-2">
+          {/* Data filter buttons */}
+          <div className="hidden md:flex items-center space-x-2 mr-4">
+            <div className="text-xs text-gray-400 mr-1">Show:</div>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "px-2 py-1 text-xs",
+                dataOption === 'all'
+                  ? "bg-blue-900/50 text-white border-blue-500/50"
+                  : "bg-black/50 text-white border-white/20"
+              )}
+              onClick={() => setDataOption('all')}
+            >
+              All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "px-2 py-1 text-xs",
+                dataOption === 'countries'
+                  ? "bg-blue-900/50 text-white border-blue-500/50"
+                  : "bg-black/50 text-white border-white/20"
+              )}
+              onClick={() => setDataOption('countries')}
+            >
+              Countries
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "px-2 py-1 text-xs",
+                dataOption === 'events'
+                  ? "bg-blue-900/50 text-white border-blue-500/50"
+                  : "bg-black/50 text-white border-white/20"
+              )}
+              onClick={() => setDataOption('events')}
+            >
+              Events
+            </Button>
+          </div>
+
           <Button
             variant="outline"
             size="sm"
@@ -577,6 +906,50 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         </div>
       </div>
 
+      {/* Mobile data filter buttons */}
+      <div className="md:hidden flex items-center justify-center mb-4 space-x-2">
+        <div className="text-xs text-gray-400 mr-1">Show:</div>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "px-3 py-1 text-xs",
+            dataOption === 'all'
+              ? "bg-blue-900/50 text-white border-blue-500/50"
+              : "bg-black/50 text-white border-white/20"
+          )}
+          onClick={() => setDataOption('all')}
+        >
+          All
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "px-3 py-1 text-xs",
+            dataOption === 'countries'
+              ? "bg-blue-900/50 text-white border-blue-500/50"
+              : "bg-black/50 text-white border-white/20"
+          )}
+          onClick={() => setDataOption('countries')}
+        >
+          Countries
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "px-3 py-1 text-xs",
+            dataOption === 'events'
+              ? "bg-blue-900/50 text-white border-blue-500/50"
+              : "bg-black/50 text-white border-white/20"
+          )}
+          onClick={() => setDataOption('events')}
+        >
+          Events
+        </Button>
+      </div>
+
       {/* Map container with improved styling */}
       <div className="relative h-96 md:h-[450px] lg:h-[500px] rounded-lg overflow-hidden shadow-lg">
         <div
@@ -596,26 +969,45 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
         )}
       </div>
 
-      {/* Map legend with improved styling */}
-      <div className="mt-3 p-3 bg-black/40 rounded-lg border border-gray-800 flex justify-between items-center">
-        <div className="w-full">
-          <div className="flex justify-between mb-1">
-            <span className="text-xs text-gray-400">Egalitarianism</span>
-            <span className="text-xs text-gray-400">Supremacism</span>
+      {/* Enhanced map legend with data source indicators */}
+      <div className="mt-3 p-3 bg-black/40 rounded-lg border border-gray-800">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Country SGM legend */}
+          <div className="flex-1">
+            <div className="flex justify-between mb-1">
+              <span className="text-xs text-gray-400">Egalitarianism</span>
+              <span className="text-xs text-gray-400">Supremacism</span>
+            </div>
+            <div className="h-3 w-full rounded-full" style={{background: 'linear-gradient(to right, #0000ff, #2a7fff, #ffffff, #ffaa00, #ff5500, #ff0000)'}}></div>
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-gray-300">0</span>
+              <span className="text-xs text-gray-300">5</span>
+              <span className="text-xs text-gray-300">10</span>
+            </div>
+            <div className="text-xs text-gray-400 text-center mt-1">
+              Country Supremacism-Egalitarianism Global Metric (SGM)
+            </div>
           </div>
-          <div className="h-3 w-full rounded-full" style={{background: 'linear-gradient(to right, #0000ff, #2a7fff, #ffffff, #ffaa00, #ff5500, #ff0000)'}}></div>
-          <div className="flex justify-between mt-1">
-            <span className="text-xs text-gray-300">0</span>
-            <span className="text-xs text-gray-300">2</span>
-            <span className="text-xs text-gray-300">4</span>
-            <span className="text-xs text-gray-300">6</span>
-            <span className="text-xs text-gray-300">8</span>
-            <span className="text-xs text-gray-300">10</span>
-          </div>
-          <div className="text-xs text-gray-400 text-center mt-2">
-            Supremacism-Egalitarianism Global Metric (SGM)
+
+          {/* Event sources legend */}
+          <div className="flex-1 flex items-center justify-center space-x-8">
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+              <span className="text-xs text-gray-300">GDELT Events</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+              <span className="text-xs text-gray-300">ACLED Events</span>
+            </div>
           </div>
         </div>
+
+        {/* Event counts or stats (optional) */}
+        {events.length > 0 && (
+          <div className="flex justify-center mt-2 text-xs text-gray-400">
+            Showing data from {countries.length} countries and {events.length} conflict events
+          </div>
+        )}
       </div>
 
       {/* Inject required CSS for spinner */}
@@ -629,6 +1021,18 @@ const LeafletHeatMap = ({ countries, onSelectCountry, isLoading = false }) => {
       </style>
     </div>
   );
+};
+
+// PropTypes validation
+LeafletHeatMap.propTypes = {
+  countries: PropTypes.array,
+  events: PropTypes.array,
+  onSelectCountry: PropTypes.func,
+  onSelectEvent: PropTypes.func,
+  isLoading: PropTypes.bool,
+  showGDELT: PropTypes.bool,
+  showACLED: PropTypes.bool,
+  showCountries: PropTypes.bool
 };
 
 export default LeafletHeatMap;
