@@ -12,6 +12,7 @@ import Contact from "./pages/Contact";
 import Partners from "./pages/Partners";
 import Donate from "./pages/Donate";
 import WorldMap from "./pages/WorldMap";
+import IndividualsMetrics from "./pages/IndividualsMetrics";
 import AdminLink from "./components/AdminLink";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
 
           {/* Additional pages */}
           <Route path="/worldmap" element={<WorldMap />} />
+          <Route path="/individuals" element={<IndividualsMetrics />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/donate" element={<Donate />} />
