@@ -46,13 +46,11 @@ const App = () => (
 
           {/* Additional pages */}
           <Route path="/worldmap" element={<WorldMap />} />
-          <Route path="/individuals" element={<IndividualsMetrics />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/donate" element={<Donate />} />
+          <Route path="/individuals-metrics" element={<IndividualsMetrics />} />
           <Route path="/admin/*" element={<AdminPage />} />
-
-          {/* Debug route removed */}
         </Routes>
 
         {/* Admin Link for development */}
