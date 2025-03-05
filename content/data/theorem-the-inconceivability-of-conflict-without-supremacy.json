@@ -1,0 +1,26 @@
+{
+  "collection_type": "data",
+  "sections": [
+    {
+      "featured": false,
+      "content_level_3": "\n\nLet us first define the fundamental terms used in this proof:\n\n1. **Conflict (C)**\n\n   * A state of sustained opposition between two or more entities.\n   * Formally: C={E1​,E2​,...,En​} where Ei​ are entities in opposition.\n2. **Supremacy (P)**\n\n   * An assertion that one entity or system is superior, dominant, or more legitimate than another.\n   * Formally: P(Ex​,Ey​) represents Ex​ asserting superiority over Ey​.\n3. **Sustained Conflict (SC)**\n\n   * A conflict that does not immediately resolve into equilibrium or neutrality.\n   * Formally: SC is defined as C persisting for t where t>0 in some temporal framework.\n4. **Neutral Interaction (N)**\n\n   * A state where entities interact without assertion of superiority.\n   * Formally: N={Ex​,Ey​} where P(Ex​,Ey​)=∅.",
+      "title": "1. The Core Definitions"
+    },
+    {
+      "featured": false,
+      "title": "2. The Logical Proposition",
+      "content_level_3": "**Claim:**\n\n∀C,(SC(C)⇒∃P)\n\nThis states that **for any sustained conflict, there must exist at least one supremacist assertion.**"
+    },
+    {
+      "featured": false,
+      "title": "3. The Proof (By Contradiction)",
+      "content_level_3": "### **Step 1: Assume Sustained Conflict Without Supremacy**\n\nSuppose **sustained conflict** exists **without** any form of supremacist claim:\n\n∃C,SC(C)∧∀Ex​,Ey​∈C,¬P(Ex​,Ey​)\n\nThis means that **entities are in opposition, but none claim superiority**.\n\n### **Step 2: Define Interaction Types**\n\nAll interactions must fall into one of the following categories:\n\n1. **Cooperative (N)**: Entities interact **without conflict**.\n2. **Competitive (C)**: Entities **compete for resources** but do not escalate into sustained opposition.\n3. **Antagonistic (SC)**: Entities are in **sustained opposition**.\n\nBy assumption, we are dealing with **SC**, yet there is **no supremacy claim**.\n\n### **Step 3: The Paradox of Sustained Opposition**\n\nFor conflict to sustain, the opposing entities must:\n\n1. **Perceive their position as valid over the alternative** (otherwise, cooperation ensues).\n2. **Reject neutral resolution** (otherwise, competition is resolved).\n3. **Maintain opposition** (otherwise, conflict dissolves).\n\nIf an entity **perceives its position as more valid than the alternative**, it **implicitly asserts superiority over the opposing position**.\n\nThus, even if **no explicit supremacist statement is made**, the **mere act of sustaining the conflict constitutes a de facto assertion of supremacy**.\n\n### **Step 4: The Contradiction**\n\n* We assumed **sustained conflict exists without supremacy**.\n* We derived that **sustained conflict necessarily entails an assertion of superiority**.\n* This contradicts our assumption.\n\n### **Step 5: Conclusion**\n\nSince the assumption leads to a contradiction, it must be false.\\\nThus, we conclude:\n\n∀C,(SC(C)⇒∃P)\n\ni.e., **sustained conflict without supremacist logic is inconceivable**."
+    },
+    {
+      "featured": false,
+      "title": " 4. Corollary: The Universality of the Law of Supremacism",
+      "content_level_3": "## **4. Corollary: The Universality of the Law of Supremacism**\n\nSince conflict **always necessitates** an assertion of supremacy, it follows that:\n\n∀C,(C⇒P)\n\nThis means **all conflict, whether short-lived or sustained, contains supremacist elements**, reinforcing the **Law of Supremacism**."
+    }
+  ],
+  "title": "Theorem: The Inconceivability of Conflict Without Supremacy"
+}
