@@ -1,5 +1,5 @@
 {
-  "collection_type": "data",
+  "collection_type": "manuscript",
   "sections": [
     {
       "featured": false,
@@ -40,6 +40,11 @@
       "featured": false,
       "title": "7. Conclusion",
       "content_level_3": "This white paper has established a rigorous, formal logical framework for the Fundamental Law of Supremacism. By defining key terms, presenting an axiomatic system, and proving through formal logic that sustained conflict necessarily implies supremacist claims, we reinforce the notion that supremacy is an invariant feature of conflict. Future research may extend these ideas through computational simulations, historical analysis, and interdisciplinary studies."
+    },
+    {
+      "featured": false,
+      "title": "8. References and Appendices",
+      "content_level_3": "\n\n## 8. References and Appendices\n\n* **References:**\\\n  \\[Include academic references, articles, and texts that influenced this work.]\n* **Appendices:**\n\n  * Extended proofs\n  * Simulation code and results\n  * Supplementary diagrams and flowcharts"
     }
   ],
   "title": "The Fundamental Law of Supremacism: A Formal Logical Framework"
