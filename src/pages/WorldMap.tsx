@@ -20,7 +20,7 @@ import {
   runGdeltAnalysis,
   fetchRegionalSummary,
   checkAnalysisStatus,
-  fetchEventData
+  fetchCombinedConflictEvents  // Corrected function name
 } from "@/lib/gdeltApi";
 
 // Define the BlurPanel component for consistent styling
@@ -543,7 +543,7 @@ const WorldMap = () => {
       setCountries(countryData);
 
       // Fetch event data with higher limits
-      const eventData = await fetchEventData();
+      const eventData = await fetchCombinedConflictEvents();
       setEvents(eventData);
 
       // Fetch regional data
