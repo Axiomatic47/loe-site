@@ -4,10 +4,50 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Content Manager</title>
+
+    <!-- Import Noto Serif font for mathematical symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap">
+
+    <!-- MathJax configuration -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Formal logic styles -->
+    <style>
+      .logic-expression {
+        font-family: 'Noto Serif', serif !important;
+        background: rgba(20, 30, 50, 0.7) !important;
+        border-left: 3px solid #3b82f6 !important;
+        border-radius: 5px !important;
+        padding: 0.75em 1em !important;
+        margin: 1em 0 !important;
+        color: white !important;
+      }
+
+      .logic-expression.inline {
+        display: inline-block !important;
+        padding: 0.1em 0.4em !important;
+        margin: 0 0.2em !important;
+        background: rgba(20, 30, 50, 0.5) !important;
+        border: none !important;
+      }
+    </style>
   </head>
   <body>
+    <!-- NetlifyCMS script -->
     <script src="https://unpkg.com/netlify-cms@^2.10.192/dist/netlify-cms.js"></script>
+
+    <!-- Custom components registration -->
     <script>
+      // Config (use this if not using config.yml)
       const config = {
         backend: {
           name: "test-repo"
@@ -97,8 +137,101 @@
         ]
       };
 
-      // Initialize the CMS
-      CMS.init({ config });
+      // Try initializing with the config
+      try {
+        CMS.init({ config });
+      } catch (e) {
+        console.log("Using default config.yml instead");
+      }
+
+      // Special direct paste logic component
+      CMS.registerEditorComponent({
+        id: "direct-logic-paste",
+        label: "Paste Logic (Direct)",
+        fields: [
+          {
+            name: "logic",
+            label: "Paste formal logic directly from ChatGPT:",
+            widget: "text"
+          }
+        ],
+        pattern: /^<div class="logic-expression">([\s\S]*?)<\/div>$/,
+        fromBlock: function(match) {
+          return {
+            logic: match[1]
+          };
+        },
+        toBlock: function(data) {
+          return `<div class="logic-expression">${data.logic}</div>`;
+        },
+        toPreview: function(data) {
+          return `<div class="logic-expression">${data.logic}</div>`;
+        }
+      });
+
+      // Regular formal logic component
+      CMS.registerEditorComponent({
+        id: "formal-logic",
+        label: "Formal Logic",
+        fields: [
+          { name: "logic", label: "Logic Expression", widget: "text" },
+          { name: "display", label: "Display Mode", widget: "select", options: ["block", "inline"], default: "block" }
+        ],
+        pattern: /^<div class="logic-expression( inline)?">([\s\S]*?)<\/div>$/,
+        fromBlock: match => ({
+          logic: match[2],
+          display: match[1] ? "inline" : "block"
+        }),
+        toBlock: data => `<div class="logic-expression${data.display === "inline" ? " inline" : ""}">${data.logic}</div>`,
+        toPreview: data => `<div class="logic-expression${data.display === "inline" ? " inline" : ""}">${data.logic}</div>`
+      });
+
+      // Process MathJax when preview updates
+      setTimeout(() => {
+        const observer = new MutationObserver(() => {
+          if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise().catch(err => console.log(err));
+          }
+        });
+
+        // When the CMS preview iframe loads
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(() => {
+            const frame = document.querySelector('iframe.frame');
+            if (frame && frame.contentDocument) {
+              observer.observe(frame.contentDocument.body, {
+                childList: true,
+                subtree: true
+              });
+            }
+          }, 3000);
+        });
+      }, 1000);
+
+      // Add keyboard shortcut for pasting logic
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          document.addEventListener('keydown', e => {
+            // Check for Ctrl+Shift+L (for "Logic paste")
+            if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+              e.preventDefault();
+
+              // Get the currently active editor
+              const editor = document.querySelector('.CodeMirror').CodeMirror;
+              if (!editor) return;
+
+              // Get clipboard content
+              navigator.clipboard.readText().then(text => {
+                // Insert the logic expression with proper formatting
+                const logicHtml = `<div class="logic-expression">${text}</div>`;
+                editor.replaceSelection(logicHtml);
+              }).catch(err => {
+                console.error('Failed to read clipboard:', err);
+              });
+            }
+          });
+        }, 3000);
+      });
     </script>
   </body>
 </html>

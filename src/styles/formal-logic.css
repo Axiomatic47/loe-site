@@ -1,0 +1,157 @@
+/* src/styles/formal-logic.css */
+/* Formal Logic Typography and Styling */
+
+/* Primary font for logic expressions - these fonts have good math symbol support */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+/* Logic expression containers */
+.logic-expression {
+  font-family: 'Noto Serif', 'Cambria Math', 'STIX Two Math', serif;
+  line-height: 1.6;
+  margin: 1em 0;
+  padding: 0.75em 1em;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  border-left: 3px solid #3b82f6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-size: 1.1em;
+  color: #ffffff;
+}
+
+/* For inline expressions within text */
+.logic-expression.inline {
+  display: inline-block;
+  padding: 0.1em 0.4em;
+  margin: 0 0.2em;
+  font-size: 1em;
+  border: none;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* Logic block for multi-line expressions or proofs */
+.logic-block {
+  font-family: 'Noto Serif', 'Cambria Math', 'STIX Two Math', serif;
+  line-height: 1.6;
+  margin: 1.5em 0;
+  padding: 1em 1.25em;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 5px;
+  border-left: 4px solid #3b82f6;
+  overflow-x: auto;
+  font-size: 1.1em;
+  color: #ffffff;
+}
+
+/* Logic symbols with proper spacing */
+.logic-and, .logic-or, .logic-not, .logic-implies, .logic-iff,
+.logic-forall, .logic-exists, .logic-equiv, .set-in, .set-notin,
+.set-union, .set-intersection, .set-subset {
+  margin: 0 0.15em;
+  display: inline-block;
+}
+
+/* Symbol definitions */
+.logic-and::before { content: "∧"; }
+.logic-or::before { content: "∨"; }
+.logic-not::before { content: "¬"; }
+.logic-implies::before { content: "→"; }
+.logic-iff::before, .logic-equiv::before { content: "↔"; }
+.logic-forall::before { content: "∀"; }
+.logic-exists::before { content: "∃"; }
+.set-in::before { content: "∈"; }
+.set-notin::before { content: "∉"; }
+.set-union::before { content: "∪"; }
+.set-intersection::before { content: "∩"; }
+.set-subset::before { content: "⊆"; }
+
+/* Proof lines styling */
+.proof-line {
+  display: flex;
+  margin: 0.3em 0;
+  align-items: flex-start;
+}
+
+.line-number {
+  min-width: 2em;
+  text-align: right;
+  margin-right: 0.75em;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.line-formula {
+  flex-grow: 1;
+}
+
+.line-justification {
+  margin-left: 1em;
+  color: #9ca3af;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+/* Different component types */
+.predicate {
+  color: #93c5fd;
+  font-style: italic;
+}
+
+.variable {
+  color: #fcd34d;
+  font-style: italic;
+}
+
+.constant {
+  color: #34d399;
+}
+
+.function-symbol {
+  color: #a78bfa;
+}
+
+/* MathJax specific styling */
+.MathJax {
+  font-size: 1.1em !important;
+}
+
+/* Allow for special symbols directly in the document */
+/* Commonly used logical symbols */
+.logical-and:after { content: " ∧ "; }
+.logical-or:after { content: " ∨ "; }
+.logical-not:after { content: "¬"; }
+.logical-implies:after { content: " → "; }
+.logical-iff:after { content: " ↔ "; }
+.logical-forall:after { content: "∀"; }
+.logical-exists:after { content: "∃"; }
+.logical-therefore:after { content: "∴"; }
+.logical-because:after { content: "∵"; }
+
+/* Media query for responsive display */
+@media (max-width: 768px) {
+  .logic-expression,
+  .logic-block {
+    font-size: 1em;
+    padding: 0.6em 0.75em;
+    overflow-x: auto;
+  }
+
+  .proof-line {
+    flex-direction: column;
+    margin-bottom: 0.8em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5em;
+  }
+
+  .line-number {
+    margin-bottom: 0.3em;
+  }
+
+  .line-justification {
+    margin-left: 0;
+    margin-top: 0.3em;
+  }
+}
