@@ -4,13 +4,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
 import { useCompositionStore } from "@/utils/compositionData";
 import { PageLayout } from "@/components/PageLayout";
 import { cn } from "@/lib/utils";
 import MobileNavigation, { useMobileNavigation } from "@/components/MobileNavigation";
+import EnhancedMarkdownRenderer from "@/components/EnhancedMarkdownRenderer";
 
 const SectionPage = () => {
   const { compositionId = "", compositionIndex = "1", sectionId = "1" } = useParams();
@@ -204,35 +202,10 @@ const SectionPage = () => {
               </div>
 
               <div className="prose prose-invert prose-lg max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw]}
-                  components={{
-                    h1: ({node, ...props}) => <h1 className="text-3xl font-serif mb-6 text-white drop-shadow-lg" {...props} />,
-                    h2: ({node, ...props}) => <h2 className="text-2xl font-serif mb-4 text-white drop-shadow-lg" {...props} />,
-                    h3: ({node, ...props}) => <h3 className="text-xl font-serif mb-3 text-white drop-shadow-lg" {...props} />,
-                    p: ({node, ...props}) => <p className="mb-4 leading-relaxed text-gray-200 drop-shadow" {...props} />,
-                    ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 text-gray-200" {...props} />,
-                    ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 text-gray-200" {...props} />,
-                    li: ({node, ...props}) => <li className="mb-2 text-gray-200" {...props} />,
-                    blockquote: ({node, ...props}) => (
-                      <blockquote className="border-l-4 border-white/20 pl-4 italic my-4 text-gray-200 backdrop-blur-sm bg-black/40 p-4 rounded-r-lg" {...props} />
-                    ),
-                    a: ({node, ...props}) => (
-                      <a className="text-blue-400 hover:text-blue-300 underline" {...props} />
-                    ),
-                    em: ({node, ...props}) => <em className="italic text-gray-200" {...props} />,
-                    strong: ({node, ...props}) => <strong className="font-bold text-white drop-shadow" {...props} />,
-                    code: ({node, inline, ...props}) =>
-                      inline ? (
-                        <code className="bg-black/50 px-1 rounded text-sm backdrop-blur-sm" {...props} />
-                      ) : (
-                        <code className="block bg-black/50 p-4 rounded text-sm overflow-x-auto backdrop-blur-sm" {...props} />
-                      ),
-                  }}
-                >
-                  {getContentForLevel()}
-                </ReactMarkdown>
+                <EnhancedMarkdownRenderer
+                  content={getContentForLevel()}
+                  className="prose prose-invert prose-lg max-w-none"
+                />
 
                 {/* Section Navigation */}
                 <div className="mt-12 pt-6 border-t border-white/10">
