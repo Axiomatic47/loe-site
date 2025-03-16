@@ -2,21 +2,32 @@
   publish = "dist"
   command = "npm run build"
 
+# Environment variables for development
+[context.dev.environment]
+  VITE_API_URL = "http://localhost:4041"
+
+# Environment variables for production
+[context.production.environment]
+  VITE_API_URL = "https://api.lawsofexistence.com"  # Update with your API domain
+
+# Handle admin routes
 [[redirects]]
   from = "/admin/*"
   to = "/admin/index.html"
   status = 200
   force = true
 
+# Handle SPA routing - redirect all routes to index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
+# Development server configuration
 [dev]
   framework = "#custom"
   command = "npm run dev"
-  targetPort = 8080
+  targetPort = 5173  # Vite's default port
   port = 8888
   publish = "dist"
   autoLaunch = false

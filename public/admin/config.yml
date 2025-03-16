@@ -1,12 +1,15 @@
 backend:
   name: git-gateway
-  branch: main # Branch to update (optional; defaults to master)
+  branch: main # Branch to update
 
-# These lines should match your netlify.toml publish directory
 publish_mode: editorial_workflow
 media_folder: "public/uploads" # Media will be stored in the repo under public/uploads
 public_folder: "/uploads" # The src attribute for uploaded media
 local_backend: true # Enables local development
+
+site_url: https://lawsofexistence.com
+display_url: https://lawsofexistence.com
+logo_url: https://lawsofexistence.com/favicon.ico
 
 collections:
   - name: manuscript
