@@ -1,8 +1,13 @@
 backend:
-  name: test-repo
-local_backend: true
-media_folder: public/uploads
-public_folder: /uploads
+  name: git-gateway
+  branch: main # Branch to update (optional; defaults to master)
+
+# These lines should match your netlify.toml publish directory
+publish_mode: editorial_workflow
+media_folder: "public/uploads" # Media will be stored in the repo under public/uploads
+public_folder: "/uploads" # The src attribute for uploaded media
+local_backend: true # Enables local development
+
 collections:
   - name: manuscript
     label: Manuscript & White Papers

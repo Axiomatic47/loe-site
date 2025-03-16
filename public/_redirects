@@ -1,0 +1,5 @@
+# Redirects for Netlify SPA
+# This ensures that all routes are handled by index.html for client-side routing
+
+/admin/*  /admin/index.html  200
+/*        /index.html        200

@@ -3,17 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "start": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "clean": "rimraf dist content/manuscript/* content/data/* public/uploads/*",
-    "reset": "npm run clean && mkdir -p content/manuscript content/data public/uploads && chmod 777 content/manuscript content/data public/uploads",
-    "cms": "npx netlify-cms-proxy-server",
-    "debug:content": "node scripts/content-debug.js",
-    "create:test": "node scripts/content-debug.js --create-test",
-    "dev:all": "concurrently \"npm run dev\" \"npm run cms\""
+"scripts": {
+  "dev": "vite",
+  "start": "vite",
+  "build": "tsc && vite build",
+  "preview": "vite preview",
+  "clean": "rimraf dist content/manuscript/* content/data/* public/uploads/*",
+  "reset": "npm run clean && mkdir -p content/manuscript content/data public/uploads && chmod 777 content/manuscript content/data public/uploads",
+  "cms": "npx netlify-cms-proxy-server",
+  "debug:content": "node scripts/content-debug.js",
+  "create:test": "node scripts/content-debug.js --create-test",
+  "dev:all": "concurrently \"npm run dev\" \"npm run cms\""
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.1.2",
