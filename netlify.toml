@@ -63,7 +63,7 @@
   status = 301
   force = true
 
-# Redirect Netlify subdomain to primary domain
+# Redirect Netlify subdomain to primary domain - USING THE CORRECT NETLIFY SITE NAME
 [[redirects]]
   from = "https://lawofexistence.netlify.app/*"
   to = "https://lawsofexistence.com/:splat"
