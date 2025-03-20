@@ -8,7 +8,7 @@
 
 # Environment variables for production
 [context.production.environment]
-  VITE_API_URL = "https://api.lawsofexistence.com"  # Update with your API domain
+  VITE_API_URL = "https://api.lawsofexistence.com"
 
 # Handle admin routes
 [[redirects]]
@@ -23,6 +23,17 @@
   to = "/index.html"
   status = 200
 
+# Add security headers
+[[headers]]
+  for = "/*"
+    [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://api.lawsofexistence.com;"
+
 # Development server configuration
 [dev]
   framework = "#custom"
@@ -31,3 +42,30 @@
   port = 8888
   publish = "dist"
   autoLaunch = false
+
+# Force HTTPS redirect
+[[redirects]]
+  from = "http://lawsofexistence.com/*"
+  to = "https://lawsofexistence.com/:splat"
+  status = 301
+  force = true
+
+# Redirect www to non-www (canonical domain is without www)
+[[redirects]]
+  from = "http://www.lawsofexistence.com/*"
+  to = "https://lawsofexistence.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.lawsofexistence.com/*"
+  to = "https://lawsofexistence.com/:splat"
+  status = 301
+  force = true
+
+# Redirect Netlify subdomain to primary domain
+[[redirects]]
+  from = "https://lawofexistence.netlify.app/*"
+  to = "https://lawsofexistence.com/:splat"
+  status = 301
+  force = true
